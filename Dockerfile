@@ -2,9 +2,9 @@
 
 FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:9.0-alpine AS build
 
-COPY ./src/OpenChat.PlaygroundApp /source/OpenChat.PlaygroundApp
+COPY ./src /source
 
-WORKDIR /source/OpenChat.PlaygroundApp
+WORKDIR /source/OpenChat.AppHost
 
 ARG TARGETARCH
 RUN case "$TARGETARCH" in \
@@ -24,4 +24,4 @@ RUN chown $APP_UID /app
 
 USER $APP_UID
 
-ENTRYPOINT ["dotnet", "OpenChat.PlaygroundApp.dll"]
+ENTRYPOINT ["dotnet", "OpenChat.AppHost.dll"]

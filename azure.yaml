@@ -13,4 +13,4 @@ services:
     docker:
       path: ../../Dockerfile.azure
       context: ../../
-      remoteBuild: true
+      remoteBuild: false
