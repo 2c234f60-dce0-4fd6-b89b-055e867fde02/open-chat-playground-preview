@@ -6,7 +6,7 @@ COPY ./src /source
 
 WORKDIR /source/OpenChat.AppHost
 
-RUN dotnet publish -c Release -o /app
+RUN dotnet publish -c Release -o ./app
 
 FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine AS final
 
