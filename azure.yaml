@@ -5,12 +5,23 @@ name: open-chat-playground-preview
 metadata:
   template: azd-init@1.18.0
 
-services:  
-  openchat-playgroundapp-preview:
-    project: src/OpenChat.AppHost
+services:
+  openchat-playgroundapp:
+    project: src/OpenChat.playgroundApp
     host: containerapp
     language: dotnet
     docker:
       path: ../../Dockerfile.azure
       context: ../../
       remoteBuild: false
+
+  ollama:
+    project: .
+    host: containerapp
+    language: docker
+    docker:
+      path: Dockerfile.ollama
+      context: .
+      remoteBuild: false
+    parameters:
+      ollamaImagePath: ${service.image}

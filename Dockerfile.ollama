@@ -1,0 +1,8 @@
+# Ollama 모델 자동 pull 및 serve용 Dockerfile
+FROM ollama/ollama:latest
+
+# 모델명 환경변수로 전달 (예: llama3.2)
+ENV OLLAMA_MODEL="llama3.2"
+
+# 컨테이너 시작 시 모델 자동 pull 및 Ollama 서버 실행
+ENTRYPOINT /bin/sh -c "ollama pull $OLLAMA_MODEL && ollama serve"

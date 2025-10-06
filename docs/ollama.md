@@ -209,3 +209,33 @@ This approach runs OpenChat Playground in a container while connecting to Ollama
     ```bash
     azd down --force --purge
     ```
+
+## Run Ollama on Azure Container Apps (CPU)
+
+OpenChat Playground는 Azure Container Apps에서 Ollama 컨테이너를 함께 띄워 경량 모델을 CPU 기반으로 서빙할 수 있습니다.
+
+### Ollama Dockerfile 예시
+루트에 아래와 같이 Dockerfile.ollama를 생성합니다.
+
+```dockerfile
+FROM ollama/ollama:latest
+ENV OLLAMA_MODEL="llama3.2"
+ENTRYPOINT /bin/sh -c "ollama pull $OLLAMA_MODEL && ollama serve"
+```
+
+### Azure 배포 방법
+1. Ollama 이미지를 빌드/ACR에 푸시합니다.
+2. infra/resources.bicep에서 connectorType이 'Ollama'일 때 Ollama 컨테이너가 자동으로 추가됩니다.
+3. 환경변수 OLLAMA_MODEL을 azd env set으로 지정하면, 컨테이너 기동 시 해당 모델을 자동 pull 후 serve합니다.
+4. OLLAMA_BASE_URL을 지정하지 않아도 앱이 정상 동작합니다. 내부적으로 기본값(http://localhost:11434)이 자동 할당됩니다.
+
+### 배포 명령 예시
+```bash
+azd env set CONNECTOR_TYPE "Ollama"
+azd env set OLLAMA_MODEL "llama3.2"
+azd up
+```
+
+이렇게 하면 Ollama 컨테이너가 CPU 기반으로 Azure Container Apps에 배포되고, 지정한 모델을 자동으로 pull하여 서빙합니다.
+
+> 참고: GPU 서버리스는 일부 리전에서만 지원되며, 경량 모델은 CPU로도 충분히 서빙 가능합니다.
