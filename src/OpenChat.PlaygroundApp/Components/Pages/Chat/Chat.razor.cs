@@ -52,6 +52,7 @@ public partial class Chat : ComponentBase, IDisposable
 
         await foreach (var update in ChatService.GetStreamingResponseAsync([.. messages], chatOptions, currentResponseCancellation.Token))
         {
+            messages.AddMessages(update, filter: c => c is not TextContent);
             responseText.Text += update.Text;
             ChatMessageItem.NotifyChanged(currentResponseMessage);
         }
