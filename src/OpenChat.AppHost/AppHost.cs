@@ -5,6 +5,19 @@ if (string.IsNullOrWhiteSpace(DASHBOARD_DISPLAY_BASEURL)){
     DASHBOARD_DISPLAY_BASEURL = "http://localhost";
 }
 
+// Ollama 모델명 파라미터 (기본값: llama3.2)
+var ollamaModel = Environment.GetEnvironmentVariable("OLLAMA_MODEL");
+if (string.IsNullOrWhiteSpace(ollamaModel))
+{
+    ollamaModel = "llama3.2";
+}
+
+// Ollama 컨테이너 추가 (Dockerfile.ollama 사용)
+var ollamaServer = builder.AddContainer("ollama-server", "ollama/ollama:latest")
+    .WithDockerfile("Dockerfile.ollama")
+    .WithEnvironment("OLLAMA_MODEL", ollamaModel)
+    .WithEndpoint(11434, name: "http", isExternal: true);
+
 builder.AddProject<Projects.OpenChat_PlaygroundApp>("amazon-bedrock")
     .WithArgs("--connector-type", "AmazonBedrock")
     .WithEnvironment("ASPNETCORE_URLS", "http://*:5281")
@@ -43,7 +56,8 @@ builder.AddProject<Projects.OpenChat_PlaygroundApp>("hugging-face")
 builder.AddProject<Projects.OpenChat_PlaygroundApp>("ollama")
     .WithArgs("--connector-type", "Ollama")
     .WithEnvironment("ASPNETCORE_URLS", "http://*:5288")
-    .WithUrl(DASHBOARD_DISPLAY_BASEURL+":5288");
+    .WithUrl(DASHBOARD_DISPLAY_BASEURL+":5288")
+    .WithEnvironment("OllamaUrl", ollamaServer.GetEndpoint("http"));
 
 builder.AddProject<Projects.OpenChat_PlaygroundApp>("anthropic")
     .WithArgs("--connector-type", "Anthropic")
