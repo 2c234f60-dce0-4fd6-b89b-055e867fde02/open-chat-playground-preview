@@ -1,53 +1,35 @@
-using Microsoft.Extensions.AI;
-
-using OllamaSharp;
-
 using OpenChat.PlaygroundApp.Abstractions;
 using OpenChat.PlaygroundApp.Configurations;
 
+using Microsoft.Extensions.AI;
+using OllamaSharp;
+
 namespace OpenChat.PlaygroundApp.Connectors;
 
-/// <summary>
-/// This represents the connector entity for Ollama.
-/// </summary>
 public class OllamaConnector(AppSettings settings) : LanguageModelConnector(settings.Ollama)
 {
-    /// <inheritdoc/>
     public override bool EnsureLanguageModelSettingsValid()
     {
         var settings = this.Settings as OllamaSettings;
         if (settings is null)
-        {
             throw new InvalidOperationException("Missing configuration: Ollama.");
-        }
-
-        if (string.IsNullOrWhiteSpace(settings.BaseUrl!.Trim()) == true)
-        {
+        if (string.IsNullOrWhiteSpace(settings.BaseUrl))
             throw new InvalidOperationException("Missing configuration: Ollama:BaseUrl.");
-        }
-
-        if (string.IsNullOrWhiteSpace(settings.Model!.Trim()) == true)
-        {
+        if (string.IsNullOrWhiteSpace(settings.Model))
             throw new InvalidOperationException("Missing configuration: Ollama:Model.");
-        }
-
         return true;
     }
 
-    /// <inheritdoc/>
     public override async Task<IChatClient> GetChatClientAsync()
     {
         var settings = this.Settings as OllamaSettings;
-        var baseUrl = settings!.BaseUrl!;
+
         var model = settings!.Model!;
-
-        var config = new OllamaApiClient.Configuration
+        var client = new OllamaApiClient(new Uri(settings.BaseUrl!))
         {
-            Uri = new Uri(baseUrl),
-            Model = model,
+            SelectedModel = model
         };
-
-        var chatClient = new OllamaApiClient(config);
+        var chatClient = client as IChatClient;
 
         return await Task.FromResult(chatClient).ConfigureAwait(false);
     }
