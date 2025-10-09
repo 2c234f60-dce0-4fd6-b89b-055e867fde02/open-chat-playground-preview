@@ -107,6 +107,23 @@ public static class ArgumentOptionConstants
         /// Defines the constant for '--model'.
         /// </summary>
         public const string Model = "--model";
+
+        /// <summary>
+        /// Defines the constant for '--access-token'.
+        /// </summary>
+        public const string AccessToken = "--access-token";
+
+        /// <summary>
+        /// Defines the constant for '--project-id'.
+        /// </summary>
+        public const string ProjectId = "--project-id";
+
+        /// <summary>
+        /// Defines the constant for '--region'.
+        /// </summary>
+        /// public const string Region = "--region";
+        public const string Region = "--region";
+
     }
 
     /// <summary>
