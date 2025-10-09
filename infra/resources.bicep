@@ -4,9 +4,6 @@ param location string = resourceGroup().location
 @description('Tags that will be applied to all resources')
 param tags object = {}
 
-@description('Ollama 이미지 경로')
-param ollamaImagePath string
-
 param connectorType string = ''
 
 // Amazon Bedrock
@@ -165,47 +162,6 @@ var envOpenAI = connectorType == 'OpenAI' ? concat(openAIModel != '' ? [
   }
 ] : []) : []
 // Upstage
-
-module ollamaApp 'br/public:avm/res/app/container-app:0.18.1' = {
-  name: 'ollama'
-  params: {
-    name: 'ollama'
-    ingressTargetPort: 11434
-    scaleSettings: {
-      minReplicas: 1
-      maxReplicas: 2
-    }
-    containers: [
-      {
-        image: ollamaImagePath
-        name: 'ollama'
-        resources: {
-          cpu: json('0.5')
-          memory: '1.0Gi'
-        }
-        env: [
-          {
-            name: 'OLLAMA_MODEL'
-            value: ollamaModel != '' ? ollamaModel : 'llama3.2'
-          }
-        ]
-      }
-    ]
-    managedIdentities: {
-      systemAssigned: false
-      userAssignedResourceIds: [openchatPlaygroundappIdentity.outputs.resourceId]
-    }
-    registries: [
-      {
-        server: containerRegistry.outputs.loginServer
-        identity: openchatPlaygroundappIdentity.outputs.resourceId
-      }
-    ]
-    environmentResourceId: containerAppsEnvironment.outputs.resourceId
-    location: location
-    tags: union(tags, { 'azd-service-name': 'ollama' })
-  }
-}
 
 module openchatPlaygroundapp 'br/public:avm/res/app/container-app:0.18.1' = {
   name: 'openchatPlaygroundapp'
