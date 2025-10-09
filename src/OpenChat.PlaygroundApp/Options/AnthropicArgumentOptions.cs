@@ -1,5 +1,6 @@
 using OpenChat.PlaygroundApp.Abstractions;
 using OpenChat.PlaygroundApp.Configurations;
+using OpenChat.PlaygroundApp.Constants;
 
 namespace OpenChat.PlaygroundApp.Options;
 
@@ -22,11 +23,18 @@ public class AnthropicArgumentOptions : ArgumentOptions
         {
             switch (args[i])
             {
-                case "--api-key":
-                    if (i + 1 < args.Length) this.ApiKey = args[++i];
+                case ArgumentOptionConstants.Anthropic.ApiKey:
+                    if (i + 1 < args.Length)
+                    {
+                        this.ApiKey = args[++i];
+                    }
                     break;
-                case "--model":
-                    if (i + 1 < args.Length) this.Model = args[++i];
+
+                case ArgumentOptionConstants.Anthropic.Model:
+                    if (i + 1 < args.Length)
+                    {
+                        this.Model = args[++i];
+                    }
                     break;
                 default:
                     break;

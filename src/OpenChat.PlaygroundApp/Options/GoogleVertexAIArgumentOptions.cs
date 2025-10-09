@@ -1,5 +1,6 @@
 using OpenChat.PlaygroundApp.Abstractions;
 using OpenChat.PlaygroundApp.Configurations;
+using OpenChat.PlaygroundApp.Constants;
 
 namespace OpenChat.PlaygroundApp.Options;
 
@@ -28,20 +29,36 @@ public class GoogleVertexAIArgumentOptions : ArgumentOptions
         {
             switch (args[i])
             {
-                case "--api-key":
-                    if (i + 1 < args.Length) this.ApiKey = args[++i];
+                case ArgumentOptionConstants.GoogleVertexAI.ApiKey:
+                    if (i + 1 < args.Length)
+                    {
+                        this.ApiKey = args[++i];
+                    }
                     break;
-                case "--model":
-                    if (i + 1 < args.Length) this.Model = args[++i];
+
+                case ArgumentOptionConstants.GoogleVertexAI.Model:
+                    if (i + 1 < args.Length)
+                    {
+                        this.Model = args[++i];
+                    }
                     break;
-                case "--access-token":
-                    if (i + 1 < args.Length) this.AccessToken = args[++i];
+                case ArgumentOptionConstants.GoogleVertexAI.AccessToken:
+                    if (i + 1 < args.Length)
+                    {
+                        this.AccessToken = args[++i];
+                    }
                     break;
-                case "--project-id":
-                    if (i + 1 < args.Length) this.ProjectId = args[++i];
+                case ArgumentOptionConstants.GoogleVertexAI.ProjectId:
+                    if (i + 1 < args.Length)
+                    {
+                        this.ProjectId = args[++i];
+                    }
                     break;
-                case "--region":
-                    if (i + 1 < args.Length) this.Region = args[++i];
+                case ArgumentOptionConstants.GoogleVertexAI.Region:
+                    if (i + 1 < args.Length)
+                    {
+                        this.Region = args[++i];
+                    }
                     break;
                 default:
                     break;

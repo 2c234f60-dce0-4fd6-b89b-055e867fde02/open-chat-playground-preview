@@ -1,5 +1,6 @@
 using OpenChat.PlaygroundApp.Abstractions;
 using OpenChat.PlaygroundApp.Configurations;
+using OpenChat.PlaygroundApp.Constants;
 
 namespace OpenChat.PlaygroundApp.Options;
 
@@ -20,8 +21,11 @@ public class FoundryLocalArgumentOptions : ArgumentOptions
         {
             switch (args[i])
             {
-                case "--alias":
-                    if (i + 1 < args.Length) this.Alias = args[++i];
+                case ArgumentOptionConstants.FoundryLocal.Alias:
+                    if (i + 1 < args.Length)
+                    {
+                        this.Alias = args[++i];
+                    }
                     break;
                 default:
                     break;
