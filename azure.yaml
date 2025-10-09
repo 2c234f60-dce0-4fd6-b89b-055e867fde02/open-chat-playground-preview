@@ -7,10 +7,21 @@ metadata:
 
 services:
   openchat-playgroundapp:
-    project: src/OpenChat.AppHost
+    project: src/OpenChat.playgroundApp
     host: containerapp
     language: dotnet
     docker:
       path: ../../Dockerfile.azure
       context: ../../
       remoteBuild: false
+
+  ollama:
+    project: .
+    host: containerapp
+    language: docker
+    docker:
+      path: Dockerfile.ollama
+      context: .
+      remoteBuild: false
+    parameters:
+      ollamaImagePath: ${service.image}
