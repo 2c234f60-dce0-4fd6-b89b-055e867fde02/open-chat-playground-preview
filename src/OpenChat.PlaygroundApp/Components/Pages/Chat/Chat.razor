@@ -4,16 +4,6 @@
 
 <ChatHeader OnNewChat="@ResetConversationAsync" ConnectorTypeName="@ConnectorTypeName" />
 
-<div class="connector-type-select">
-    <label for="connectorType">Connector Type:</label>
-    <select id="connectorType" @bind="selectedConnectorType">
-        @foreach (var type in ConnectorTypes)
-        {
-            <option value="@type">@type.ToString()</option>
-        }
-    </select>
-</div>
-
 <ChatMessageList Messages="@messages" InProgressMessage="@currentResponseMessage">
     <NoMessagesContent>
         <div>To get started, try asking about anything.</div>

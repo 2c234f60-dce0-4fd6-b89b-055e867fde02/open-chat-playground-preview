@@ -13,6 +13,7 @@ using OpenChat.PlaygroundApp.Services;
 using OpenTelemetry.Trace;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddLogging();
 builder.AddServiceDefaults();
 
 var config = builder.Configuration;
@@ -22,8 +23,6 @@ if (settings.Help == true)
     ArgumentOptions.DisplayHelp();
     return;
 }
-
-builder.Services.AddSingleton(new OpenChat.PlaygroundApp.Abstractions.ConnectorTypeInfo(settings.ConnectorType.ToString()));
 
 builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents();
@@ -37,27 +36,37 @@ TracerProvider tracerProvider = OpenTelemetry.Sdk.CreateTracerProviderBuilder()
 
 // Cache
 IDistributedCache cache = new MemoryDistributedCache(Options.Create(new MemoryDistributedCacheOptions()));
-var chatClients = new Dictionary<ConnectorType, IChatClient>();
+var chatClientFactories = new Dictionary<ConnectorType, Func<IServiceProvider, IChatClient>>();
 
 // ChatService
+builder.Services.AddSingleton(new OpenChat.PlaygroundApp.Abstractions.ConnectorTypeInfo(settings.ConnectorType.ToString()));
 var enabledTypes = settings.EnabledConnectorTypes?.Count > 0
     ? settings.EnabledConnectorTypes
-    : new List<ConnectorType> { settings.ConnectorType };
+    : Enum.GetValues(typeof(ConnectorType)).Cast<ConnectorType>().Where(t => t != ConnectorType.Unknown).ToList();
+
 foreach (var connectorType in enabledTypes)
 {
-    var chatClient = await LanguageModelConnector.CreateChatClientAsync(settings, connectorType);
-    builder.Services.AddChatClient(chatClient)
-                    .UseDistributedCache(cache)
-                    .UseFunctionInvocation()
-                    .UseOpenTelemetry(
-                        sourceName: sourceName,
-                        configure: c => c.EnableSensitiveData = true
-                    )
-                    .UseLogging();
-
-    chatClients[connectorType] = chatClient;
+    try
+    {
+        settings.ConnectorType = connectorType;
+        var chatClient = await LanguageModelConnector.CreateChatClientAsync(settings, connectorType);
+        var builderChain = builder.Services.AddChatClient(chatClient)
+            .UseDistributedCache(cache)
+            .UseFunctionInvocation()
+            .UseOpenTelemetry(
+                sourceName: sourceName,
+                configure: c => c.EnableSensitiveData = true
+            )
+            .UseLogging();
+        chatClientFactories[connectorType] = sp => builderChain.Build(sp);
+    }
+    catch (Exception ex)
+    {
+        // 설정이 없는 경우: 명확한 예외를 발생시키는 Dummy Factory 등록
+        chatClientFactories[connectorType] = sp => throw new InvalidOperationException($"ConnectorType '{connectorType}' is not properly configured: {ex.Message}");
+    }
 }
-builder.Services.AddSingleton<IDictionary<ConnectorType, IChatClient>>(chatClients);
+builder.Services.AddSingleton<IDictionary<ConnectorType, Func<IServiceProvider, IChatClient>>>(chatClientFactories);
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddOpenApi("openapi", options =>
@@ -67,7 +76,8 @@ builder.Services.AddOpenApi("openapi", options =>
 
 builder.Services.AddScoped<IChatService, ChatService>(sp =>
     new ChatService(
-        sp.GetRequiredService<IDictionary<ConnectorType, IChatClient>>(),
+        sp.GetRequiredService<IDictionary<ConnectorType, Func<IServiceProvider, IChatClient>>>(),
+        sp,
         sp.GetRequiredService<ILogger<ChatService>>()
     )
 );

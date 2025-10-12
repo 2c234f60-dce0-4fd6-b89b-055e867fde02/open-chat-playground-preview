@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Components;
-
 using Microsoft.Extensions.AI;
+
 using OpenChat.PlaygroundApp.Connectors;
 using OpenChat.PlaygroundApp.Services;
 
@@ -19,9 +19,6 @@ public partial class Chat : ComponentBase, IDisposable
     private CancellationTokenSource? currentResponseCancellation;
     private ChatMessage? currentResponseMessage;
     private ChatInput? chatInput;
-
-    // ConnectorType 선택 관련
-    private List<ConnectorType> ConnectorTypes = new();
     private ConnectorType selectedConnectorType;
 
     [Inject]
@@ -40,15 +37,8 @@ public partial class Chat : ComponentBase, IDisposable
     {
         messages.Add(new(ChatRole.System, SystemPrompt));
 
-        // DI 또는 AppSettings에서 ConnectorType 목록을 가져옴
-        // 임시: 모든 enum 값에서 Unknown 제외
-        ConnectorTypes = Enum.GetValues(typeof(ConnectorType))
-            .Cast<ConnectorType>()
-            .Where(t => t != ConnectorType.Unknown)
-            .ToList();
-
-        // 기본 선택값: 첫 번째 ConnectorType
-        selectedConnectorType = ConnectorTypes.FirstOrDefault();
+        // Default to GitHubModels if available
+        selectedConnectorType = ConnectorType.GitHubModels;
     }
 
     private async Task AddUserMessageAsync(ChatMessage userMessage)

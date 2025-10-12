@@ -34,6 +34,7 @@ public class ChatResponseEndpoint(IChatService chatService, ILogger<ChatResponse
 
     private async IAsyncEnumerable<ChatResponse> PostChatResponseAsync(
         [FromBody] IEnumerable<ChatRequest> request,
+        [FromQuery] OpenChat.PlaygroundApp.Connectors.ConnectorType connectorType,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         var chats = request.ToList();
@@ -43,7 +44,7 @@ public class ChatResponseEndpoint(IChatService chatService, ILogger<ChatResponse
         var messages = chats.Select(chat => new ChatMessage(new(chat.Role), chat.Message));
         var options = new ChatOptions();
 
-        var result = this._chatService.GetStreamingResponseAsync(messages, options, cancellationToken: cancellationToken);
+        var result = this._chatService.GetStreamingResponseAsync(messages, connectorType, options, cancellationToken: cancellationToken);
         await foreach (var update in result)
         {
             yield return new ChatResponse { Role = update.Role?.Value ?? string.Empty, Message = update.Text };

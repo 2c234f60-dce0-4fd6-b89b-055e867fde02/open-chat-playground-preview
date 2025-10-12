@@ -15,7 +15,9 @@ public class ChatServiceTests
         var logger = Substitute.For<ILogger<ChatService>>();
 
         // Act
-        Action action = () => new ChatService(default(IChatClient)!, logger);
+        var dict = (IDictionary<OpenChat.PlaygroundApp.Connectors.ConnectorType, Func<IServiceProvider, IChatClient>>)null!;
+        var sp = Substitute.For<IServiceProvider>();
+        Action action = () => new ChatService(dict, sp, logger);
 
         // Assert
         action.ShouldThrow<ArgumentNullException>();
@@ -26,10 +28,11 @@ public class ChatServiceTests
     public void Given_Null_Logger_When_ChatService_Instantiated_Then_It_Should_Throw()
     {
         // Arrange
-        var client = Substitute.For<IChatClient>();
+        var dict = new Dictionary<OpenChat.PlaygroundApp.Connectors.ConnectorType, Func<IServiceProvider, IChatClient>>();
+        var sp = Substitute.For<IServiceProvider>();
 
         // Act
-        Action action = () => new ChatService(client, default(ILogger<ChatService>)!);
+        Action action = () => new ChatService(dict, sp, default(ILogger<ChatService>)!);
 
         // Assert
         action.ShouldThrow<ArgumentNullException>();
@@ -42,9 +45,14 @@ public class ChatServiceTests
         // Arrange
         var client = Substitute.For<IChatClient>();
         var logger = Substitute.For<ILogger<ChatService>>();
+        var sp = Substitute.For<IServiceProvider>();
+        var dict = new Dictionary<OpenChat.PlaygroundApp.Connectors.ConnectorType, Func<IServiceProvider, IChatClient>>
+        {
+            [OpenChat.PlaygroundApp.Connectors.ConnectorType.GitHubModels] = _ => client
+        };
 
         // Act
-        var result = new ChatService(client, logger);
+        var result = new ChatService(dict, sp, logger);
 
         // Assert
         result.ShouldNotBeNull();
@@ -57,7 +65,12 @@ public class ChatServiceTests
         // Arrange
         var chatClient = Substitute.For<IChatClient>();
         var logger = Substitute.For<ILogger<ChatService>>();
-        var chatService = new ChatService(chatClient, logger);
+        var sp = Substitute.For<IServiceProvider>();
+        var dict = new Dictionary<OpenChat.PlaygroundApp.Connectors.ConnectorType, Func<IServiceProvider, IChatClient>>
+        {
+            [OpenChat.PlaygroundApp.Connectors.ConnectorType.GitHubModels] = _ => chatClient
+        };
+        var chatService = new ChatService(dict, sp, logger);
 
         var messages = new List<ChatMessage>
         {
@@ -65,7 +78,7 @@ public class ChatServiceTests
         };
 
         // Act
-        Action action = () => chatService.GetStreamingResponseAsync(messages);
+        Action action = () => chatService.GetStreamingResponseAsync(messages, OpenChat.PlaygroundApp.Connectors.ConnectorType.GitHubModels);
 
         // Assert
         action.ShouldThrow<ArgumentException>()
@@ -79,7 +92,12 @@ public class ChatServiceTests
         // Arrange
         var chatClient = Substitute.For<IChatClient>();
         var logger = Substitute.For<ILogger<ChatService>>();
-        var chatService = new ChatService(chatClient, logger);
+        var sp = Substitute.For<IServiceProvider>();
+        var dict = new Dictionary<OpenChat.PlaygroundApp.Connectors.ConnectorType, Func<IServiceProvider, IChatClient>>
+        {
+            [OpenChat.PlaygroundApp.Connectors.ConnectorType.GitHubModels] = _ => chatClient
+        };
+        var chatService = new ChatService(dict, sp, logger);
 
         var messages = new List<ChatMessage>
         {
@@ -88,7 +106,7 @@ public class ChatServiceTests
         };
 
         // Act
-        Action action = () => chatService.GetStreamingResponseAsync(messages);
+    Action action = () => chatService.GetStreamingResponseAsync(messages, OpenChat.PlaygroundApp.Connectors.ConnectorType.GitHubModels);
 
         // Assert
         action.ShouldThrow<ArgumentException>()
@@ -102,7 +120,12 @@ public class ChatServiceTests
         // Arrange
         var chatClient = Substitute.For<IChatClient>();
         var logger = Substitute.For<ILogger<ChatService>>();
-        var chatService = new ChatService(chatClient, logger);
+        var sp = Substitute.For<IServiceProvider>();
+        var dict = new Dictionary<OpenChat.PlaygroundApp.Connectors.ConnectorType, Func<IServiceProvider, IChatClient>>
+        {
+            [OpenChat.PlaygroundApp.Connectors.ConnectorType.GitHubModels] = _ => chatClient
+        };
+        var chatService = new ChatService(dict, sp, logger);
 
         var messages = new List<ChatMessage>
         {
@@ -111,7 +134,7 @@ public class ChatServiceTests
         };
 
         // Act
-        Action action = () => chatService.GetStreamingResponseAsync(messages);
+    Action action = () => chatService.GetStreamingResponseAsync(messages, OpenChat.PlaygroundApp.Connectors.ConnectorType.GitHubModels);
 
         // Assert
         action.ShouldThrow<ArgumentException>()
@@ -134,7 +157,12 @@ public class ChatServiceTests
                   .Returns(responses.ToAsyncEnumerable());
 
         var logger = Substitute.For<ILogger<ChatService>>();
-        var chatService = new ChatService(chatClient, logger);
+        var sp = Substitute.For<IServiceProvider>();
+        var dict = new Dictionary<OpenChat.PlaygroundApp.Connectors.ConnectorType, Func<IServiceProvider, IChatClient>>
+        {
+            [OpenChat.PlaygroundApp.Connectors.ConnectorType.GitHubModels] = _ => chatClient
+        };
+        var chatService = new ChatService(dict, sp, logger);
 
         var messages = new List<ChatMessage>
         {
@@ -143,7 +171,7 @@ public class ChatServiceTests
         };
 
         // Act
-        var result = chatService.GetStreamingResponseAsync(messages);
+        var result = chatService.GetStreamingResponseAsync(messages, OpenChat.PlaygroundApp.Connectors.ConnectorType.GitHubModels);
         var count = await result.CountAsync();
 
         // Assert

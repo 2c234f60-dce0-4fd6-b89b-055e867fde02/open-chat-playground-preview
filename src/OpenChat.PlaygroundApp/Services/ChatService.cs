@@ -28,12 +28,14 @@ public interface IChatService
 /// </summary>
 public class ChatService : IChatService
 {
-    private readonly IDictionary<ConnectorType, IChatClient> _chatClients;
+    private readonly IDictionary<ConnectorType, Func<IServiceProvider, IChatClient>> _chatClientFactories;
+    private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<ChatService> _logger;
 
-    public ChatService(IDictionary<ConnectorType, IChatClient> chatClients, ILogger<ChatService> logger)
+    public ChatService(IDictionary<ConnectorType, Func<IServiceProvider, IChatClient>> chatClientFactories, IServiceProvider serviceProvider, ILogger<ChatService> logger)
     {
-        _chatClients = chatClients ?? throw new ArgumentNullException(nameof(chatClients));
+        _chatClientFactories = chatClientFactories ?? throw new ArgumentNullException(nameof(chatClientFactories));
+        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -60,10 +62,11 @@ public class ChatService : IChatService
         }
 
         _logger.LogInformation("Requesting chat response with {MessageCount} messages for {ConnectorType}", chats.Count, connectorType);
-        if (!_chatClients.TryGetValue(connectorType, out var chatClient))
+        if (!_chatClientFactories.TryGetValue(connectorType, out var factory))
         {
-            throw new InvalidOperationException($"ChatClient for ConnectorType '{connectorType}' is not registered.");
+            throw new InvalidOperationException($"ChatClient factory for ConnectorType '{connectorType}' is not registered.");
         }
+        var chatClient = factory(_serviceProvider);
         return chatClient.GetStreamingResponseAsync(chats, options, cancellationToken);
     }
 }
