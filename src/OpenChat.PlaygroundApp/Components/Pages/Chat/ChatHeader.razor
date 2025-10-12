@@ -11,16 +11,15 @@
     <h1 class="page-width">
         OpenChat Playground With
         <br/>
-        <span style="width: fit-content; background-color:yellow">&nbsp; @selectedConnectorType &nbsp;</span>
+        <span style="width: fit-content; background-color:yellow">&nbsp; @SelectedConnectorType &nbsp;</span>
     </h1>
 
     <div class="connector-type-select">
         <label for="connectorType">Select Connector Type 👉</label>
-        <select id="connectorType" @bind="selectedConnectorType">
-            @* 콤보박스 변경 시 selectedConnectorType setter에서 OnConnectorTypeChanged 호출 *@
+        <select id="connectorType" value="@SelectedConnectorType" @onchange="OnConnectorTypeChangedInternal">
             @foreach (var type in ConnectorTypes)
             {
-                <option value="@type">@type.ToString()</option>
+                <option value="@type" selected="@(type == SelectedConnectorType)">@type.ToString()</option>
             }
         </select>
     </div>

@@ -37,6 +37,12 @@ public partial class Chat : ComponentBase, IDisposable
         selectedConnectorType = ConnectorType.GitHubModels;
     }
 
+    private async Task OnConnectorTypeChanged(OpenChat.PlaygroundApp.Connectors.ConnectorType newType)
+    {
+        selectedConnectorType = newType;
+        await InvokeAsync(StateHasChanged);
+    }
+
     private async Task AddUserMessageAsync(ChatMessage userMessage)
     {
         CancelAnyCurrentResponse();

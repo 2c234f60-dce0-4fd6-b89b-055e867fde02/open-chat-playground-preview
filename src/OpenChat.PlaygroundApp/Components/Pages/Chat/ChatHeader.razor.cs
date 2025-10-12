@@ -9,10 +9,14 @@ public partial class ChatHeader : ComponentBase
     [Parameter]
     public EventCallback OnNewChat { get; set; }
 
+    [Parameter]
+    public OpenChat.PlaygroundApp.Connectors.ConnectorType SelectedConnectorType { get; set; }
+
+    [Parameter]
+    public EventCallback<OpenChat.PlaygroundApp.Connectors.ConnectorType> OnConnectorTypeChanged { get; set; }
+
     // ConnectorType 선택 관련
     private List<OpenChat.PlaygroundApp.Connectors.ConnectorType> ConnectorTypes = new();
-
-    public OpenChat.PlaygroundApp.Connectors.ConnectorType selectedConnectorType { get; set; }
 
     protected override void OnInitialized()
     {
@@ -20,7 +24,14 @@ public partial class ChatHeader : ComponentBase
             .Cast<OpenChat.PlaygroundApp.Connectors.ConnectorType>()
             .Where(t => t != OpenChat.PlaygroundApp.Connectors.ConnectorType.Unknown)
             .ToList();
+    }
 
-        selectedConnectorType = ConnectorTypes.FirstOrDefault();
+    private async Task OnConnectorTypeChangedInternal(ChangeEventArgs e)
+    {
+        if (Enum.TryParse<OpenChat.PlaygroundApp.Connectors.ConnectorType>(e.Value?.ToString(), out var newType))
+        {
+            await OnConnectorTypeChanged.InvokeAsync(newType);
+            Console.WriteLine($"Connector type changed to: {newType}");
+        }
     }
 }
