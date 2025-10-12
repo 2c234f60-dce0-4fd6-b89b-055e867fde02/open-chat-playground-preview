@@ -30,13 +30,9 @@ public partial class Chat : ComponentBase, IDisposable
     [Inject]
     public required OpenChat.PlaygroundApp.Abstractions.ConnectorTypeInfo ConnectorTypeInfo { get; set; }
 
-    public string ConnectorTypeName => ConnectorTypeInfo.Name;
-
-
     protected override void OnInitialized()
     {
         messages.Add(new(ChatRole.System, SystemPrompt));
-
         // Default to GitHubModels if available
         selectedConnectorType = ConnectorType.GitHubModels;
     }
