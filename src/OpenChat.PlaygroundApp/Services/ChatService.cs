@@ -1,21 +1,20 @@
 using Microsoft.Extensions.AI;
 
-using OpenChat.PlaygroundApp.Connectors;
-
 namespace OpenChat.PlaygroundApp.Services;
 
+/// <summary>
+/// This provides interfaces to the chat service.
+/// </summary>
 public interface IChatService
 {
     /// <summary>
     /// Sends chat messages and streams the response.
     /// </summary>
-    /// <param name="connectorType">사용할 ConnectorType</param>
     /// <param name="messages">The sequence of <see cref="ChatMessage"/> to send.</param>
     /// <param name="options">The <see cref="ChatOptions"/> with which to configure the request.</param>
     /// <param name="cancellationToken">The <see cref="CancellationToken"/> to monitor for cancellation requests. The default is <see cref="CancellationToken.None"/>.</param>
     /// <returns>The <see cref="ChatResponseUpdate"/> generated.</returns>
     IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
-        ConnectorType connectorType,
         IEnumerable<ChatMessage> messages,
         ChatOptions? options = null,
         CancellationToken cancellationToken = default);
@@ -26,14 +25,13 @@ public interface IChatService
 /// </summary>
 /// <param name="chatClient">The <see cref="IChatClient"/>.</param>
 /// <param name="logger">The <see cref="ILogger{ChatService}"/>.</param>
-public class ChatService(Dictionary<ConnectorType, IChatClient> chatClients, ILogger<ChatService> logger) : IChatService
+public class ChatService(IChatClient chatClient, ILogger<ChatService> logger) : IChatService
 {
-    private readonly Dictionary<ConnectorType, IChatClient> _chatClients = chatClients ?? throw new ArgumentNullException(nameof(chatClients));
+    private readonly IChatClient _chatClient = chatClient ?? throw new ArgumentNullException(nameof(chatClient));
     private readonly ILogger<ChatService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     /// <inheritdoc/>
     public IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
-        ConnectorType connectorType,
         IEnumerable<ChatMessage> messages,
         ChatOptions? options = null,
         CancellationToken cancellationToken = default)
@@ -54,13 +52,8 @@ public class ChatService(Dictionary<ConnectorType, IChatClient> chatClients, ILo
             throw new ArgumentException("The second message must be a user message", nameof(messages));
         }
 
-        this._logger.LogInformation("Requesting chat response with {MessageCount} messages for {ConnectorType}", chats.Count, connectorType);
+        this._logger.LogInformation("Requesting chat response with {MessageCount} messages", chats.Count);
 
-        if (!_chatClients.TryGetValue(connectorType, out var chatClient))
-        {
-            throw new InvalidOperationException($"ChatClient for {connectorType} not found");
-        }
-
-        return chatClient.GetStreamingResponseAsync(chats, options, cancellationToken);
+        return this._chatClient.GetStreamingResponseAsync(chats, options, cancellationToken);
     }
 }

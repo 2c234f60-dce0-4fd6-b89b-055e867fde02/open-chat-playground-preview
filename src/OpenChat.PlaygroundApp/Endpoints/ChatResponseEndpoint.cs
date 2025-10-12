@@ -34,7 +34,6 @@ public class ChatResponseEndpoint(IChatService chatService, ILogger<ChatResponse
 
     private async IAsyncEnumerable<ChatResponse> PostChatResponseAsync(
         [FromBody] IEnumerable<ChatRequest> request,
-        [FromQuery] string? connectorType,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         var chats = request.ToList();
@@ -44,12 +43,7 @@ public class ChatResponseEndpoint(IChatService chatService, ILogger<ChatResponse
         var messages = chats.Select(chat => new ChatMessage(new(chat.Role), chat.Message));
         var options = new ChatOptions();
 
-        // ConnectorType 파싱 및 기본값 처리
-        var connector = OpenChat.PlaygroundApp.Connectors.ConnectorType.GitHubModels;
-        if (!string.IsNullOrWhiteSpace(connectorType) && Enum.TryParse<OpenChat.PlaygroundApp.Connectors.ConnectorType>(connectorType, true, out var parsed))
-            connector = parsed;
-
-        var result = this._chatService.GetStreamingResponseAsync(connector, messages, options, cancellationToken);
+        var result = this._chatService.GetStreamingResponseAsync(messages, options, cancellationToken: cancellationToken);
         await foreach (var update in result)
         {
             yield return new ChatResponse { Role = update.Role?.Value ?? string.Empty, Message = update.Text };
