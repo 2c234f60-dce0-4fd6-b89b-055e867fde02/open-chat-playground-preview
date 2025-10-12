@@ -1,8 +1,22 @@
 ﻿@page "/"
 
+@using OpenChat.PlaygroundApp.Connectors
+
 <PageTitle>OpenChat Playground</PageTitle>
 
-<ChatHeader OnNewChat="@ResetConversationAsync" ConnectorTypeName="@ConnectorTypeName" />
+<div class="chat-header-controls page-width">
+    <label for="connectorTypeSelect">Connector: </label>
+    <select id="connectorTypeSelect" @onchange="OnConnectorTypeChanged" value="@SelectedConnectorType">
+        @foreach (var type in Enum.GetValues(typeof(ConnectorType)).Cast<ConnectorType>())
+        {
+            if (type == ConnectorType.Unknown) continue;
+            <option value="@type" selected="@(type == SelectedConnectorType)">@type.ToString()</option>
+        }
+    </select>
+    <button class="btn-default" @onclick="@ResetConversationAsync">New chat</button>
+</div>
+
+<ChatHeader OnNewChat="@ResetConversationAsync" ConnectorTypeName="@SelectedConnectorType.ToString()" />
 
 <ChatMessageList Messages="@messages" InProgressMessage="@currentResponseMessage">
     <NoMessagesContent>
@@ -12,5 +26,9 @@
 
 <div class="chat-container">
     <ChatInput OnSend="@AddUserMessageAsync" @ref="@chatInput" />
-    <SurveyPrompt /> @* Remove this line to eliminate the template survey message *@
+    <SurveyPrompt />
 </div>
+
+@code {
+    // ...existing code...
+}

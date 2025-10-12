@@ -35,6 +35,10 @@ public partial class Chat : ComponentBase, IDisposable
         messages.Add(new(ChatRole.System, SystemPrompt));
     }
 
+
+    [Parameter]
+    public OpenChat.PlaygroundApp.Connectors.ConnectorType SelectedConnectorType { get; set; } = OpenChat.PlaygroundApp.Connectors.ConnectorType.GitHubModels;
+
     private async Task AddUserMessageAsync(ChatMessage userMessage)
     {
         CancelAnyCurrentResponse();
@@ -50,7 +54,7 @@ public partial class Chat : ComponentBase, IDisposable
 
         await InvokeAsync(StateHasChanged);
 
-        await foreach (var update in ChatService.GetStreamingResponseAsync([.. messages], chatOptions, currentResponseCancellation.Token))
+        await foreach (var update in ChatService.GetStreamingResponseAsync(SelectedConnectorType, [.. messages], chatOptions, currentResponseCancellation.Token))
         {
             messages.AddMessages(update, filter: c => c is not TextContent);
             responseText.Text += update.Text;
@@ -72,6 +76,16 @@ public partial class Chat : ComponentBase, IDisposable
 
         currentResponseCancellation?.Cancel();
         currentResponseMessage = null;
+    }
+
+    private async Task OnConnectorTypeChanged(ChangeEventArgs e)
+    {
+        if (Enum.TryParse<OpenChat.PlaygroundApp.Connectors.ConnectorType>(e.Value?.ToString(), out var newType))
+        {
+            SelectedConnectorType = newType;
+            await ResetConversationAsync();
+            StateHasChanged();
+        }
     }
 
     private async Task ResetConversationAsync()
