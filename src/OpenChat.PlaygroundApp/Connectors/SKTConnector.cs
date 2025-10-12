@@ -8,15 +8,22 @@ namespace OpenChat.PlaygroundApp.Connectors;
 
 public class SKTConnector(AppSettings settings) : LanguageModelConnector(settings.SKT)
 {
+    private readonly AppSettings _appSettings = settings ?? throw new ArgumentNullException(nameof(settings));
+
     public override bool EnsureLanguageModelSettingsValid()
     {
-        var settings = this.Settings as SKTSettings;
-        if (settings is null)
+        if (this.Settings is not SKTSettings settings)
+        {
             throw new InvalidOperationException("Missing configuration: SKT.");
+        }
         if (string.IsNullOrWhiteSpace(settings.BaseUrl))
+        {
             throw new InvalidOperationException("Missing configuration: SKT:BaseUrl.");
+        }
         if (string.IsNullOrWhiteSpace(settings.Model))
+        {
             throw new InvalidOperationException("Missing configuration: SKT:Model.");
+        }
         return true;
     }
 
@@ -30,6 +37,8 @@ public class SKTConnector(AppSettings settings) : LanguageModelConnector(setting
             SelectedModel = model
         };
         var chatClient = client as IChatClient;
+
+        Console.WriteLine($"The {this._appSettings.ConnectorType} connector created with model: {settings.Model}");
 
         return await Task.FromResult(chatClient).ConfigureAwait(false);
     }

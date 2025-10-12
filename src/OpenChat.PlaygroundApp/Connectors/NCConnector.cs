@@ -8,15 +8,23 @@ namespace OpenChat.PlaygroundApp.Connectors;
 
 public class NCConnector(AppSettings settings) : LanguageModelConnector(settings.NC)
 {
+    private readonly AppSettings _appSettings = settings ?? throw new ArgumentNullException(nameof(settings));
+
     public override bool EnsureLanguageModelSettingsValid()
     {
-        var settings = this.Settings as NCSettings;
-        if (settings is null)
+        if (this.Settings is not NCSettings settings)
+        {
             throw new InvalidOperationException("Missing configuration: NC.");
+        }
         if (string.IsNullOrWhiteSpace(settings.BaseUrl))
+        {
             throw new InvalidOperationException("Missing configuration: NC:BaseUrl.");
+        }
         if (string.IsNullOrWhiteSpace(settings.Model))
+        {
             throw new InvalidOperationException("Missing configuration: NC:Model.");
+        }
+
         return true;
     }
 
@@ -30,6 +38,8 @@ public class NCConnector(AppSettings settings) : LanguageModelConnector(settings
             SelectedModel = model
         };
         var chatClient = client as IChatClient;
+
+        Console.WriteLine($"The {this._appSettings.ConnectorType} connector created with model: {settings.Model}");
 
         return await Task.FromResult(chatClient).ConfigureAwait(false);
     }

@@ -9,19 +9,30 @@ namespace OpenChat.PlaygroundApp.Connectors;
 
 public class AmazonBedrockConnector(AppSettings settings) : LanguageModelConnector(settings.AmazonBedrock)
 {
+    private readonly AppSettings _appSettings = settings ?? throw new ArgumentNullException(nameof(settings));
+
     public override bool EnsureLanguageModelSettingsValid()
     {
-        var settings = this.Settings as AmazonBedrockSettings;
-        if (settings is null)
+        if (this.Settings is not AmazonBedrockSettings settings)
+        {
             throw new InvalidOperationException("Missing configuration: AmazonBedrock.");
-        if (string.IsNullOrWhiteSpace(settings.Region))
+        }
+        if (string.IsNullOrWhiteSpace(settings.Region?.Trim()))
+        {
             throw new InvalidOperationException("Missing configuration: AmazonBedrock:Region.");
-        if (string.IsNullOrWhiteSpace(settings.ModelId))
+        }
+        if (string.IsNullOrWhiteSpace(settings.ModelId?.Trim()))
+        {
             throw new InvalidOperationException("Missing configuration: AmazonBedrock:ModelId.");
-        if (string.IsNullOrWhiteSpace(settings.AccessKeyId))
+        }
+        if (string.IsNullOrWhiteSpace(settings.AccessKeyId?.Trim()))
+        {
             throw new InvalidOperationException("Missing configuration: AmazonBedrock:AccessKeyId.");
-        if (string.IsNullOrWhiteSpace(settings.SecretAccessKey))
+        }
+        if (string.IsNullOrWhiteSpace(settings.SecretAccessKey?.Trim()))
+        {
             throw new InvalidOperationException("Missing configuration: AmazonBedrock:SecretAccessKey.");
+        }
         return true;
     }
 
@@ -37,6 +48,8 @@ public class AmazonBedrockConnector(AppSettings settings) : LanguageModelConnect
         var chatClient = client.AsIChatClient(
             settings!.ModelId!
         );
+
+        Console.WriteLine($"The {this._appSettings.ConnectorType} connector created with model: {settings.ModelId}");
 
         return await Task.FromResult(chatClient).ConfigureAwait(false);
     }

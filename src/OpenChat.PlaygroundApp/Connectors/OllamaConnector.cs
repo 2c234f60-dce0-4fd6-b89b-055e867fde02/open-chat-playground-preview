@@ -8,15 +8,22 @@ namespace OpenChat.PlaygroundApp.Connectors;
 
 public class OllamaConnector(AppSettings settings) : LanguageModelConnector(settings.Ollama)
 {
+    private readonly AppSettings _appSettings = settings ?? throw new ArgumentNullException(nameof(settings));
+
     public override bool EnsureLanguageModelSettingsValid()
     {
-        var settings = this.Settings as OllamaSettings;
-        if (settings is null)
+        if (this.Settings is not OllamaSettings settings)
+        {
             throw new InvalidOperationException("Missing configuration: Ollama.");
+        }
         if (string.IsNullOrWhiteSpace(settings.BaseUrl))
+        {
             throw new InvalidOperationException("Missing configuration: Ollama:BaseUrl.");
+        }
         if (string.IsNullOrWhiteSpace(settings.Model))
+        {
             throw new InvalidOperationException("Missing configuration: Ollama:Model.");
+        }
         return true;
     }
 
@@ -30,6 +37,8 @@ public class OllamaConnector(AppSettings settings) : LanguageModelConnector(sett
             SelectedModel = model
         };
         var chatClient = client as IChatClient;
+
+        Console.WriteLine($"The {this._appSettings.ConnectorType} connector created with model: {settings.Model}");
 
         return await Task.FromResult(chatClient).ConfigureAwait(false);
     }

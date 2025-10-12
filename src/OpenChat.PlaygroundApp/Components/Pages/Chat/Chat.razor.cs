@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.AI;
 
+using OpenChat.PlaygroundApp.Connectors;
 using OpenChat.PlaygroundApp.Services;
 
 namespace OpenChat.PlaygroundApp.Components.Pages.Chat;
@@ -18,6 +19,7 @@ public partial class Chat : ComponentBase, IDisposable
     private CancellationTokenSource? currentResponseCancellation;
     private ChatMessage? currentResponseMessage;
     private ChatInput? chatInput;
+    private ConnectorType selectedConnectorType;
 
     [Inject]
     public required IChatService ChatService { get; set; }
@@ -28,11 +30,17 @@ public partial class Chat : ComponentBase, IDisposable
     [Inject]
     public required OpenChat.PlaygroundApp.Abstractions.ConnectorTypeInfo ConnectorTypeInfo { get; set; }
 
-    public string ConnectorTypeName => ConnectorTypeInfo.Name;
-
     protected override void OnInitialized()
     {
         messages.Add(new(ChatRole.System, SystemPrompt));
+        // Default to GitHubModels if available
+        selectedConnectorType = ConnectorType.GitHubModels;
+    }
+
+    private async Task OnConnectorTypeChanged(OpenChat.PlaygroundApp.Connectors.ConnectorType newType)
+    {
+        selectedConnectorType = newType;
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task AddUserMessageAsync(ChatMessage userMessage)
@@ -50,7 +58,12 @@ public partial class Chat : ComponentBase, IDisposable
 
         await InvokeAsync(StateHasChanged);
 
-        await foreach (var update in ChatService.GetStreamingResponseAsync([.. messages], chatOptions, currentResponseCancellation.Token))
+
+        await foreach (var update in ChatService.GetStreamingResponseAsync(
+            [.. messages],
+            selectedConnectorType,
+            chatOptions,
+            currentResponseCancellation.Token))
         {
             messages.AddMessages(update, filter: c => c is not TextContent);
             responseText.Text += update.Text;

@@ -1,5 +1,7 @@
 using Microsoft.Extensions.AI;
 
+using OpenChat.PlaygroundApp.Connectors;
+
 namespace OpenChat.PlaygroundApp.Services;
 
 /// <summary>
@@ -16,6 +18,7 @@ public interface IChatService
     /// <returns>The <see cref="ChatResponseUpdate"/> generated.</returns>
     IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
         IEnumerable<ChatMessage> messages,
+        ConnectorType connectorType,
         ChatOptions? options = null,
         CancellationToken cancellationToken = default);
 }
@@ -23,16 +26,22 @@ public interface IChatService
 /// <summary>
 /// This represents the service entity for chat operations.
 /// </summary>
-/// <param name="chatClient">The <see cref="IChatClient"/>.</param>
-/// <param name="logger">The <see cref="ILogger{ChatService}"/>.</param>
-public class ChatService(IChatClient chatClient, ILogger<ChatService> logger) : IChatService
+public class ChatService : IChatService
 {
-    private readonly IChatClient _chatClient = chatClient ?? throw new ArgumentNullException(nameof(chatClient));
-    private readonly ILogger<ChatService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IDictionary<ConnectorType, Func<IServiceProvider, IChatClient>> _chatClientFactories;
+    private readonly IServiceProvider _serviceProvider;
+    private readonly ILogger<ChatService> _logger;
 
-    /// <inheritdoc/>
+    public ChatService(IDictionary<ConnectorType, Func<IServiceProvider, IChatClient>> chatClientFactories, IServiceProvider serviceProvider, ILogger<ChatService> logger)
+    {
+        _chatClientFactories = chatClientFactories ?? throw new ArgumentNullException(nameof(chatClientFactories));
+        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    }
+
     public IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
         IEnumerable<ChatMessage> messages,
+        ConnectorType connectorType,
         ChatOptions? options = null,
         CancellationToken cancellationToken = default)
     {
@@ -52,8 +61,12 @@ public class ChatService(IChatClient chatClient, ILogger<ChatService> logger) : 
             throw new ArgumentException("The second message must be a user message", nameof(messages));
         }
 
-        this._logger.LogInformation("Requesting chat response with {MessageCount} messages", chats.Count);
-
-        return this._chatClient.GetStreamingResponseAsync(chats, options, cancellationToken);
+        _logger.LogInformation("Requesting chat response with {MessageCount} messages for {ConnectorType}", chats.Count, connectorType);
+        if (!_chatClientFactories.TryGetValue(connectorType, out var factory))
+        {
+            throw new InvalidOperationException($"ChatClient factory for ConnectorType '{connectorType}' is not registered.");
+        }
+        var chatClient = factory(_serviceProvider);
+        return chatClient.GetStreamingResponseAsync(chats, options, cancellationToken);
     }
 }

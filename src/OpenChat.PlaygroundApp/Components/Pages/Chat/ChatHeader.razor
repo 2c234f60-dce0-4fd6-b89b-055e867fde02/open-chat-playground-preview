@@ -1,10 +1,3 @@
-
-@using Microsoft.AspNetCore.Components
-@code {
-    [Parameter]
-    public string? ConnectorTypeName { get; set; }
-}
-
 <div class="chat-header-container main-background-gradient">
     <div class="chat-header-controls page-width">
         <button class="btn-default" @onclick="@OnNewChat">
@@ -16,7 +9,18 @@
     </div>
 
     <h1 class="page-width">
-        OpenChat Playground With 
-        <span style="width: fit-content; background-color:yellow">&nbsp;@ConnectorTypeName&nbsp;</span>
+        OpenChat Playground With
+        <br/>
+        <span style="width: fit-content; background-color:yellow">&nbsp; @SelectedConnectorType &nbsp;</span>
     </h1>
+
+    <div class="connector-type-select">
+        <label for="connectorType">Select Connector Type 👉</label>
+        <select id="connectorType" value="@SelectedConnectorType" @onchange="OnConnectorTypeChangedInternal">
+            @foreach (var type in ConnectorTypes)
+            {
+                <option value="@type" selected="@(type == SelectedConnectorType)">@type.ToString()</option>
+            }
+        </select>
+    </div>
 </div>
