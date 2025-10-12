@@ -9,15 +9,22 @@ namespace OpenChat.PlaygroundApp.Connectors;
 
 public class GoogleVertexAIConnector(AppSettings settings) : LanguageModelConnector(settings.GoogleVertexAI)
 {
+    private readonly AppSettings _appSettings = settings ?? throw new ArgumentNullException(nameof(settings));
+
     public override bool EnsureLanguageModelSettingsValid()
     {
-        var settings = this.Settings as GoogleVertexAISettings;
-        if (settings is null)
+        if (this.Settings is not GoogleVertexAISettings settings)
+        {
             throw new InvalidOperationException("Missing configuration: GoogleVertexAI.");
+        }
         if (string.IsNullOrWhiteSpace(settings.ApiKey))
+        {
             throw new InvalidOperationException("Missing configuration: GoogleVertexAI:ApiKey.");
+        }
         if (string.IsNullOrWhiteSpace(settings.Model))
+        {
             throw new InvalidOperationException("Missing configuration: GoogleVertexAI:Model.");
+        }
         return true;
     }
 
@@ -27,6 +34,7 @@ public class GoogleVertexAIConnector(AppSettings settings) : LanguageModelConnec
 
         // 기존 : GeminiClient 사용 
         // IChatClient chatClient = new GeminiChatClient(settings!.ApiKey!, settings!.Model!);
+        //Console.WriteLine($"The {this._appSettings.ConnectorType} connector created with model: {settings.}");
         // return await Task.FromResult(chatClient).ConfigureAwait(false);
 
         // 변경1 : VertexAI 사용
@@ -34,11 +42,13 @@ public class GoogleVertexAIConnector(AppSettings settings) : LanguageModelConnec
         var vertexAI = new VertexAI(projectId: settings!.ProjectId!, region: settings!.Region!);
         var model = vertexAI.GenerativeModel(model: settings!.Model!);
         model.AccessToken = accessToken;
+        Console.WriteLine($"The {this._appSettings.ConnectorType} connector created with model: {settings.Model}");
         return await Task.FromResult(model.AsIChatClient()).ConfigureAwait(false);
 
         // 변경2 : GoogleAI 사용
         //var googleAI = new GoogleAI(accessToken: settings!.AccessToken!);
         //var model = googleAI.GenerativeModel(model: settings.Model!);
+        //Console.WriteLine($"The {this._appSettings.ConnectorType} connector created with model: {settings.}");
         //return await Task.FromResult(model.AsIChatClient()).ConfigureAwait(false);
     }
 
@@ -150,7 +160,6 @@ public class GoogleVertexAIConnector(AppSettings settings) : LanguageModelConnec
             string error = await process.StandardError.ReadToEndAsync();
             throw new InvalidOperationException($"gcloud 명령어 실패: {error}");
         }
-        Console.WriteLine(output.Trim());
         return output.Trim();
     }
 }

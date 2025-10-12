@@ -10,13 +10,18 @@ namespace OpenChat.PlaygroundApp.Connectors;
 
 public class FoundryLocalConnector(AppSettings settings) : LanguageModelConnector(settings.FoundryLocal)
 {
+    private readonly AppSettings _appSettings = settings ?? throw new ArgumentNullException(nameof(settings));
+
     public override bool EnsureLanguageModelSettingsValid()
     {
-        var settings = this.Settings as FoundryLocalSettings;
-        if (settings is null)
+        if (this.Settings is not FoundryLocalSettings settings)
+        {
             throw new InvalidOperationException("Missing configuration: FoundryLocal.");
-        if (string.IsNullOrWhiteSpace(settings.Alias))
+        }
+        if (string.IsNullOrWhiteSpace(settings.Alias?.Trim()))
+        {
             throw new InvalidOperationException("Missing configuration: FoundryLocal:Alias.");
+        }
         return true;
     }
 
@@ -35,6 +40,8 @@ public class FoundryLocalConnector(AppSettings settings) : LanguageModelConnecto
         var client = new OpenAIClient(credential, options);
         var chatClient = client.GetChatClient(model!.ModelId)
                                .AsIChatClient();
+
+        Console.WriteLine($"The {this._appSettings.ConnectorType} connector created with model: {settings.Alias}");
 
         return await Task.FromResult(chatClient).ConfigureAwait(false);
     }
