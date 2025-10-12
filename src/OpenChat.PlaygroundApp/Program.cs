@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 
 using OpenChat.PlaygroundApp.Abstractions;
 using OpenChat.PlaygroundApp.Components;
+using OpenChat.PlaygroundApp.Connectors;
 using OpenChat.PlaygroundApp.Endpoints;
 using OpenChat.PlaygroundApp.OpenApi;
 using OpenChat.PlaygroundApp.Services;
@@ -27,25 +28,36 @@ builder.Services.AddSingleton(new OpenChat.PlaygroundApp.Abstractions.ConnectorT
 builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents();
 
-// Configure OpenTelemetry
+// OpenTelemetry
 string sourceName = Guid.NewGuid().ToString();
 TracerProvider tracerProvider = OpenTelemetry.Sdk.CreateTracerProviderBuilder()
     .AddSource(sourceName)
     .AddConsoleExporter()
     .Build();
 
-// Configure Language Model Client
-var chatClient = await LanguageModelConnector.CreateChatClientAsync(settings);
+// Cache
 IDistributedCache cache = new MemoryDistributedCache(Options.Create(new MemoryDistributedCacheOptions()));
+var chatClients = new Dictionary<ConnectorType, IChatClient>();
 
-builder.Services.AddChatClient(chatClient)
-                .UseDistributedCache(cache)
-                .UseFunctionInvocation()
-                .UseOpenTelemetry(
-                    sourceName: sourceName,
-                    configure: c => c.EnableSensitiveData = true
-                )
-                .UseLogging();
+// ChatService
+var enabledTypes = settings.EnabledConnectorTypes?.Count > 0
+    ? settings.EnabledConnectorTypes
+    : new List<ConnectorType> { settings.ConnectorType };
+foreach (var connectorType in enabledTypes)
+{
+    var chatClient = await LanguageModelConnector.CreateChatClientAsync(settings, connectorType);
+    builder.Services.AddChatClient(chatClient)
+                    .UseDistributedCache(cache)
+                    .UseFunctionInvocation()
+                    .UseOpenTelemetry(
+                        sourceName: sourceName,
+                        configure: c => c.EnableSensitiveData = true
+                    )
+                    .UseLogging();
+
+    chatClients[connectorType] = chatClient;
+}
+builder.Services.AddSingleton<IDictionary<ConnectorType, IChatClient>>(chatClients);
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddOpenApi("openapi", options =>
@@ -53,7 +65,12 @@ builder.Services.AddOpenApi("openapi", options =>
     options.AddDocumentTransformer<OpenApiDocumentTransformer>();
 });
 
-builder.Services.AddScoped<IChatService, ChatService>();
+builder.Services.AddScoped<IChatService, ChatService>(sp =>
+    new ChatService(
+        sp.GetRequiredService<IDictionary<ConnectorType, IChatClient>>(),
+        sp.GetRequiredService<ILogger<ChatService>>()
+    )
+);
 builder.Services.AddEndpoints(typeof(Program).Assembly);
 
 var app = builder.Build();

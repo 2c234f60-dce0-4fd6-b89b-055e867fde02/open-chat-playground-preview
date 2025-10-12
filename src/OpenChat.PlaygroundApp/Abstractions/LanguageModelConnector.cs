@@ -58,4 +58,36 @@ public abstract class LanguageModelConnector(LanguageModelSettings? settings)
 
         return await connector.GetChatClientAsync().ConfigureAwait(false);
     }
+
+    /// <summary>
+    /// Gets an <see cref="IChatClient"/> instance for a specific ConnectorType.
+    /// </summary>
+    /// <param name="settings"><see cref="AppSettings"/> instance.</param>
+    /// <param name="connectorType">ConnectorType to instantiate.</param>
+    /// <returns>Returns <see cref="IChatClient"/> instance.</returns>
+    public static async Task<IChatClient> CreateChatClientAsync(AppSettings settings, ConnectorType connectorType)
+    {
+        LanguageModelConnector connector = connectorType switch
+        {
+            ConnectorType.AmazonBedrock => new AmazonBedrockConnector(settings),
+            ConnectorType.AzureAIFoundry => new AzureAIFoundryConnector(settings),
+            ConnectorType.GitHubModels => new GitHubModelsConnector(settings),
+            ConnectorType.GoogleVertexAI => new GoogleVertexAIConnector(settings),
+            ConnectorType.DockerModelRunner => new DockerModelRunnerConnector(settings),
+            ConnectorType.FoundryLocal => new FoundryLocalConnector(settings),
+            ConnectorType.HuggingFace => new HuggingFaceConnector(settings),
+            ConnectorType.Ollama => new OllamaConnector(settings),
+            ConnectorType.Anthropic => new AnthropicConnector(settings),
+            ConnectorType.LG => new LGConnector(settings),
+            ConnectorType.Naver => new NaverConnector(settings),
+            ConnectorType.NC => new NCConnector(settings),
+            ConnectorType.SKT => new SKTConnector(settings),
+            ConnectorType.OpenAI => new OpenAIConnector(settings),
+            ConnectorType.Upstage => new UpstageConnector(settings),
+            _ => throw new NotSupportedException($"Connector type '{connectorType}' is not supported.")
+        };
+
+        connector.EnsureLanguageModelSettingsValid();
+        return await connector.GetChatClientAsync().ConfigureAwait(false);
+    }
 }

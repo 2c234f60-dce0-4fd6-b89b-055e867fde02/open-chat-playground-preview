@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.AI;
 
+using Microsoft.Extensions.AI;
+using OpenChat.PlaygroundApp.Connectors;
 using OpenChat.PlaygroundApp.Services;
 
 namespace OpenChat.PlaygroundApp.Components.Pages.Chat;
@@ -19,6 +20,10 @@ public partial class Chat : ComponentBase, IDisposable
     private ChatMessage? currentResponseMessage;
     private ChatInput? chatInput;
 
+    // ConnectorType 선택 관련
+    private List<ConnectorType> ConnectorTypes = new();
+    private ConnectorType selectedConnectorType;
+
     [Inject]
     public required IChatService ChatService { get; set; }
     
@@ -30,9 +35,20 @@ public partial class Chat : ComponentBase, IDisposable
 
     public string ConnectorTypeName => ConnectorTypeInfo.Name;
 
+
     protected override void OnInitialized()
     {
         messages.Add(new(ChatRole.System, SystemPrompt));
+
+        // DI 또는 AppSettings에서 ConnectorType 목록을 가져옴
+        // 임시: 모든 enum 값에서 Unknown 제외
+        ConnectorTypes = Enum.GetValues(typeof(ConnectorType))
+            .Cast<ConnectorType>()
+            .Where(t => t != ConnectorType.Unknown)
+            .ToList();
+
+        // 기본 선택값: 첫 번째 ConnectorType
+        selectedConnectorType = ConnectorTypes.FirstOrDefault();
     }
 
     private async Task AddUserMessageAsync(ChatMessage userMessage)
@@ -50,7 +66,12 @@ public partial class Chat : ComponentBase, IDisposable
 
         await InvokeAsync(StateHasChanged);
 
-        await foreach (var update in ChatService.GetStreamingResponseAsync([.. messages], chatOptions, currentResponseCancellation.Token))
+
+        await foreach (var update in ChatService.GetStreamingResponseAsync(
+            [.. messages],
+            selectedConnectorType,
+            chatOptions,
+            currentResponseCancellation.Token))
         {
             messages.AddMessages(update, filter: c => c is not TextContent);
             responseText.Text += update.Text;
