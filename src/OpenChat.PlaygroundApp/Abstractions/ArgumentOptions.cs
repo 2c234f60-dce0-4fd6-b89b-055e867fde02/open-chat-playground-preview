@@ -179,7 +179,6 @@ public abstract class ArgumentOptions
                 settings.AmazonBedrock.Region = amazonBedrock.Region ?? settings.AmazonBedrock.Region;
                 settings.AmazonBedrock.ModelId = amazonBedrock.ModelId ?? settings.AmazonBedrock.ModelId;
                 break;
-
             case AzureAIFoundryArgumentOptions azureAIFoundry:
                 settings.AzureAIFoundry ??= new AzureAIFoundrySettings();
                 settings.AzureAIFoundry.Endpoint = azureAIFoundry.Endpoint ?? settings.AzureAIFoundry.Endpoint;

@@ -17,6 +17,9 @@ public partial class AppSettings
     /// Gets or sets the list of enabled connector types for multi-connector support.
     /// </summary>
     public List<ConnectorType> EnabledConnectorTypes { get; set; } = new();
+    /// Gets or sets the model name to use.
+    /// </summary>
+    public string? Model { get; set; }
 
     /// <summary>
     /// Gets or sets the value indicating whether to display help information or not.

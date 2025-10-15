@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components;
 
 using OpenChat.PlaygroundApp.Connectors;
+using OpenChat.PlaygroundApp.Configurations;
 
 namespace OpenChat.PlaygroundApp.Components.Pages.Chat;
 
@@ -15,6 +16,9 @@ public partial class ChatHeader : ComponentBase
     [Parameter]
     public EventCallback<OpenChat.PlaygroundApp.Connectors.ConnectorType> OnConnectorTypeChanged { get; set; }
 
+    [Inject]
+    public required AppSettings Settings { get; set; }
+    
     // ConnectorType 선택 관련
     private List<OpenChat.PlaygroundApp.Connectors.ConnectorType> ConnectorTypes = new();
 
