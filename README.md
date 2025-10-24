@@ -60,8 +60,10 @@ Open Chat Playground (OCP) is a web UI that is able to connect virtually any LLM
 
 ### Run on local machine
 
+- [Use Amazon Bedrock](./docs/amazon-bedrock.md#run-on-local-machine)
 - [Use Azure AI Foundry](./docs/azure-ai-foundry.md#run-on-local-machine)
 - [Use GitHub Models](./docs/github-models.md#run-on-local-machine)
+- [Use Docker Model Runner](./docs/docker-model-runner.md#run-on-local-machine)
 - [Use Hugging Face](./docs/hugging-face.md#run-on-local-machine)
 - [Use LG](./docs/lg.md#run-on-local-machine)
 - [Use OpenAI](./docs/openai.md#run-on-local-machine)
@@ -69,8 +71,10 @@ Open Chat Playground (OCP) is a web UI that is able to connect virtually any LLM
 
 ### Run in local container
 
+- [Use Amazon Bedrock](./docs/amazon-bedrock.md#run-in-local-container)
 - [Use Azure AI Foundry](./docs/azure-ai-foundry.md#run-in-local-container)
 - [Use GitHub Models](./docs/github-models.md#run-in-local-container)
+- [Use Docker Model Runner](./docs/docker-model-runner.md#run-in-local-container)
 - [Use Hugging Face](./docs/hugging-face.md#run-in-local-container)
 - [Use LG](./docs/lg.md#run-in-local-container)
 - [Use OpenAI](./docs/openai.md#run-in-local-container)
@@ -78,8 +82,10 @@ Open Chat Playground (OCP) is a web UI that is able to connect virtually any LLM
 
 ### Run on Azure
 
+- [Use Amazon Bedrock](./docs/amazon-bedrock.md#run-on-azure)
 - [Use Azure AI Foundry](./docs/azure-ai-foundry.md#run-on-azure)
 - [Use GitHub Models](./docs/github-models.md#run-on-azure)
+- ~~Use Docker Model Runner~~ 👉 NOT SUPPORTED
 - [Use Hugging Face](./docs/hugging-face.md#run-on-azure)
 - [Use LG](./docs/lg.md#run-on-azure)
 - [Use OpenAI](./docs/openai.md#run-on-azure)
@@ -160,6 +166,13 @@ Open Chat Playground (OCP) is a web UI that is able to connect virtually any LLM
 
 #### Integration tests
 
+1. Make sure you have the Ollama server up and running on your local machine.
+
+    ```bash
+    ollama serve
+    ollama run hf.co/Qwen/Qwen3-0.6B-GGUF
+    ```
+
 1. Make sure you are at the repository root.
 
     ```bash
@@ -175,7 +188,7 @@ Open Chat Playground (OCP) is a web UI that is able to connect virtually any LLM
 1. Run the app.
 
     ```bash
-    dotnet run --project $REPOSITORY_ROOT/src/OpenChat.PlaygroundApp
+    dotnet run --project $REPOSITORY_ROOT/src/OpenChat.PlaygroundApp -- --connector-type HuggingFace
     ```
 
 1. Run tests.

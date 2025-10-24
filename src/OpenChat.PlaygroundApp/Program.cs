@@ -19,6 +19,7 @@ builder.AddServiceDefaults();
 
 var config = builder.Configuration;
 var settings = ArgumentOptions.Parse(config, args);
+ArgumentOptions.DisplayBanner();
 if (settings.Help == true)
 {
     ArgumentOptions.DisplayHelp();

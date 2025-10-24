@@ -32,8 +32,8 @@ public abstract class ArgumentOptions
         (ConnectorType.GoogleVertexAI, ArgumentOptionConstants.GoogleVertexAI.ProjectId, false),
         (ConnectorType.GoogleVertexAI, ArgumentOptionConstants.GoogleVertexAI.Region, false),
         // Docker Model Runner
-        (ConnectorType.DockerModelRunner, "--base-url", false),
-        (ConnectorType.DockerModelRunner, "--model", false),
+        (ConnectorType.DockerModelRunner, ArgumentOptionConstants.DockerModelRunner.BaseUrl, false),
+        (ConnectorType.DockerModelRunner, ArgumentOptionConstants.DockerModelRunner.Model, false),
         // Foundry Local
         (ConnectorType.FoundryLocal, ArgumentOptionConstants.FoundryLocal.Alias, false),
         // Hugging Face
@@ -85,15 +85,21 @@ public abstract class ArgumentOptions
     /// <returns>The verified <see cref="ConnectorType"/> value.</returns>
     public static ConnectorType VerifyConnectorType(IConfiguration config, string[] args)
     {
-        var connectorType = Enum.TryParse<ConnectorType>(config[AppSettingConstants.ConnectorType], ignoreCase: true, out var result) ? result : ConnectorType.Unknown;
+        var connectorType = Enum.TryParse<ConnectorType>(config[AppSettingConstants.ConnectorType], ignoreCase: true, out var configResult)
+                            ? configResult
+                            : ConnectorType.Unknown;
+        if (Enum.TryParse<ConnectorType>(config[EnvironmentVariableConstants.ConnectorType], ignoreCase: true, out var environmentResult))
+        {
+            connectorType = environmentResult;
+        }
         for (var i = 0; i < args.Length; i++)
         {
             if (string.Equals(args[i], ArgumentOptionConstants.ConnectorType, StringComparison.InvariantCultureIgnoreCase) ||
                 string.Equals(args[i], ArgumentOptionConstants.ConnectorTypeInShort, StringComparison.InvariantCultureIgnoreCase))
             {
-                if (i + 1 < args.Length && Enum.TryParse<ConnectorType>(args[i + 1], ignoreCase: true, out result))
+                if (i + 1 < args.Length && Enum.TryParse<ConnectorType>(args[i + 1], ignoreCase: true, out var argumentResult))
                 {
-                    connectorType = result;
+                    connectorType = argumentResult;
                 }
                 break;
             }
@@ -203,6 +209,7 @@ public abstract class ArgumentOptions
                 settings.DockerModelRunner ??= new DockerModelRunnerSettings();
                 settings.DockerModelRunner.BaseUrl = dockerModelRunner.BaseUrl ?? settings.DockerModelRunner.BaseUrl;
                 settings.DockerModelRunner.Model = dockerModelRunner.Model ?? settings.DockerModelRunner.Model;
+                settings.Model = dockerModelRunner.Model ?? settings.DockerModelRunner.Model;
                 break;
             case FoundryLocalArgumentOptions foundryLocal:
                 settings.FoundryLocal ??= new FoundryLocalSettings();
@@ -266,24 +273,44 @@ public abstract class ArgumentOptions
     }
 
     /// <summary>
+    /// Displays the application banner.
+    /// </summary>
+    public static void DisplayBanner()
+    {
+        string cyan = "\x1b[38;5;51m";
+        string blue = "\x1b[38;5;33m";
+        string purple = "\x1b[38;5;141m";
+        string pink = "\x1b[38;5;201m";
+        string green = "\x1b[38;5;48m";
+        string reset = "\x1b[0m";
+
+        Console.OutputEncoding = System.Text.Encoding.UTF8;
+
+        Console.WriteLine();
+        Console.WriteLine($@"{cyan}   ██████╗ ██████╗ ███████╗███╗   ██╗   ██████╗██╗  ██╗ █████╗ ████████╗{reset}");
+        Console.WriteLine($@"{blue}  ██╔═══██╗██╔══██╗██╔════╝████╗  ██║  ██╔════╝██║  ██║██╔══██╗╚══██╔══╝{reset}");
+        Console.WriteLine($@"{purple}  ██║   ██║██████╔╝█████╗  ██╔██╗ ██║  ██║     ███████║███████║   ██║   {reset}");
+        Console.WriteLine($@"{pink}  ██║   ██║██╔═══╝ ██╔══╝  ██║╚██╗██║  ██║     ██╔══██║██╔══██║   ██║   {reset}");
+        Console.WriteLine($@"{cyan}  ╚██████╔╝██║     ███████╗██║ ╚████║  ╚██████╗██║  ██║██║  ██║   ██║   {reset}");
+        Console.WriteLine($@"{blue}   ╚═════╝ ╚═╝     ╚══════╝╚═╝  ╚═══╝   ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   {reset}");
+
+        Console.WriteLine();
+
+        Console.WriteLine($@"{green}  ██████╗ ██╗      █████╗ ██╗   ██╗ ██████╗ ██████╗  ██████╗ ██╗   ██╗███╗   ██╗██████╗ {reset}");
+        Console.WriteLine($@"{green}  ██╔══██╗██║     ██╔══██╗╚██╗ ██╔╝██╔════╝ ██╔══██╗██╔═══██╗██║   ██║████╗  ██║██╔══██╗{reset}");
+        Console.WriteLine($@"{cyan}  ██████╔╝██║     ███████║ ╚████╔╝ ██║  ███╗██████╔╝██║   ██║██║   ██║██╔██╗ ██║██║  ██║{reset}");
+        Console.WriteLine($@"{blue}  ██╔═══╝ ██║     ██╔══██║  ╚██╔╝  ██║   ██║██╔══██╗██║   ██║██║   ██║██║╚██╗██║██║  ██║{reset}");
+        Console.WriteLine($@"{purple}  ██║     ███████╗██║  ██║   ██║   ╚██████╔╝██║  ██║╚██████╔╝╚██████╔╝██║ ╚████║██████╔╝{reset}");
+        Console.WriteLine($@"{pink}  ╚═╝     ╚══════╝╚═╝  ╚═╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝ ╚═════╝  ╚═════╝ ╚═╝  ╚═══╝╚═════╝ {reset}");
+
+        Console.WriteLine();
+    }
+
+    /// <summary>
     /// Displays the help information for the command line arguments.
     /// </summary>
     public static void DisplayHelp()
     {
-        var foregroundColor = Console.ForegroundColor;
-
-        Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.WriteLine("OpenChat Playground");
-        Console.ForegroundColor = foregroundColor;
-
-        Console.WriteLine("Usage: [options]");
-        Console.WriteLine();
-        Console.WriteLine("Options:");
-        Console.WriteLine($"  {ArgumentOptionConstants.ConnectorType}|{ArgumentOptionConstants.ConnectorTypeInShort}  The connector type. Supporting connectors are:");
-        Console.WriteLine("                       - AmazonBedrock, AzureAIFoundry, GitHubModels, GoogleVertexAI");
-        Console.WriteLine("                       - DockerModelRunner, FoundryLocal, HuggingFace, Ollama");
-        Console.WriteLine("                       - Anthropic, LG, Naver, NC, SKT, OpenAI, Upstage");
-        Console.WriteLine();
         DisplayHelpForAmazonBedrock();
         DisplayHelpForAzureAIFoundry();
         DisplayHelpForGitHubModels();
@@ -404,9 +431,9 @@ public abstract class ArgumentOptions
         Console.WriteLine("  ** Docker Model Runner: **");
         Console.ForegroundColor = foregroundColor;
 
-    Console.WriteLine("  --base-url           The Docker Model Runner base URL. Default to 'http://localhost:11434'");
-    Console.WriteLine("  --model              The model name for Docker Model Runner.");
-    Console.WriteLine();
+        Console.WriteLine($"  {ArgumentOptionConstants.DockerModelRunner.BaseUrl}           The base URL. Default to 'http://localhost:12434'");
+        Console.WriteLine($"  {ArgumentOptionConstants.DockerModelRunner.Model}              The model name. Default to 'ai/smollm2'");
+        Console.WriteLine();
     }
 
     private static void DisplayHelpForFoundryLocal()
