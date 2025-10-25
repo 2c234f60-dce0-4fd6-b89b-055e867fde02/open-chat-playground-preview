@@ -1,0 +1,116 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "OpenChat Playground API",
+    "description": "An API for the OpenChat Playground.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000/"
+    }
+  ],
+  "paths": {
+    "/api/chat/responses": {
+      "post": {
+        "tags": [
+          "Chat"
+        ],
+        "operationId": "PostChatResponses",
+        "parameters": [
+          {
+            "name": "connectorType",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "Unknown",
+                "AmazonBedrock",
+                "AzureAIFoundry",
+                "GitHubModels",
+                "GoogleVertexAI",
+                "DockerModelRunner",
+                "FoundryLocal",
+                "HuggingFace",
+                "Ollama",
+                "Anthropic",
+                "LG",
+                "Naver",
+                "NC",
+                "SKT",
+                "OpenAI",
+                "Upstage"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ChatRequest"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ChatResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ChatRequest": {
+        "required": [
+          "role",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "ChatResponse": {
+        "required": [
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Chat"
+    }
+  ]
+}

@@ -8,5 +8,27 @@
         </button>
     </div>
 
-    <h1 class="page-width">OpenChat.PlaygroundApp</h1>
+    <h1 class="page-width">
+        OpenChat Playground
+    </h1>
+    
+    <h1 class="chat-header-app-title page-width">
+        <span class="app-title-text">OpenChat Playground</span>
+        <span class="app-title-settings">
+            <span>&ndash;</span>
+            <span class="app-connector">@Settings.ConnectorType</span>
+            <span>|</span>
+            <span class="app-model">@Settings.Model</span>
+        </span>
+    </h1>
+
+    <div class="connector-type-select">
+        <label for="connectorType">Select Connector Type 👉</label>
+        <select id="connectorType" value="@SelectedConnectorType" @onchange="OnConnectorTypeChangedInternal">
+            @foreach (var type in ConnectorTypes)
+            {
+                <option value="@type" selected="@(type == SelectedConnectorType)">@type.ToString()</option>
+            }
+        </select>
+    </div>
 </div>

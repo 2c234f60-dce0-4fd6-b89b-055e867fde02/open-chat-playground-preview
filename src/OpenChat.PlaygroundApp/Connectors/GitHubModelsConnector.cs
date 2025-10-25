@@ -12,13 +12,15 @@ namespace OpenChat.PlaygroundApp.Connectors;
 /// <summary>
 /// This represents the connector entity for GitHub Models.
 /// </summary>
+/// <param name="settings"><see cref="AppSettings"/> instance.</param>
 public class GitHubModelsConnector(AppSettings settings) : LanguageModelConnector(settings.GitHubModels)
 {
+    private readonly AppSettings _appSettings = settings ?? throw new ArgumentNullException(nameof(settings));
+
     /// <inheritdoc/>
     public override bool EnsureLanguageModelSettingsValid()
     {
-        var settings = this.Settings as GitHubModelsSettings;
-        if (settings is null)
+        if (this.Settings is not GitHubModelsSettings settings)
         {
             throw new InvalidOperationException("Missing configuration: GitHubModels.");
         }
@@ -46,15 +48,25 @@ public class GitHubModelsConnector(AppSettings settings) : LanguageModelConnecto
     {
         var settings = this.Settings as GitHubModelsSettings;
 
-        var credential = new ApiKeyCredential(settings?.Token ?? throw new InvalidOperationException("Missing configuration: GitHubModels:Token."));
+        var endpoint = settings!.Endpoint!.Trim() ?? throw new InvalidOperationException("Missing configuration: GitHubModels:Endpoint.");
+        if (Uri.IsWellFormedUriString(endpoint, UriKind.Absolute) == false)
+        {
+            throw new UriFormatException($"Invalid URI: The GitHub Models endpoint '{endpoint}' is not a valid URI.");
+        }
+        var model = settings.Model!.Trim() ?? throw new InvalidOperationException("Missing configuration: GitHubModels:Model.");
+        var token = settings.Token!.Trim() ?? throw new InvalidOperationException("Missing configuration: GitHubModels:Token.");
+
+        var credential = new ApiKeyCredential(token);
         var options = new OpenAIClientOptions()
         {
-            Endpoint = new Uri(settings.Endpoint ?? throw new InvalidOperationException("Missing configuration: GitHubModels:Endpoint."))
+            Endpoint = new Uri(endpoint)
         };
 
         var client = new OpenAIClient(credential, options);
-        var chatClient = client.GetChatClient(settings.Model)
+        var chatClient = client.GetChatClient(model)
                                .AsIChatClient();
+
+        Console.WriteLine($"The {this._appSettings.ConnectorType} connector created with model: {model}");
 
         return await Task.FromResult(chatClient).ConfigureAwait(false);
     }

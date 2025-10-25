@@ -2,9 +2,9 @@
 
 FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:9.0-alpine AS build
 
-COPY ./src/OpenChat.PlaygroundApp /source/OpenChat.PlaygroundApp
+COPY ./src /source
 
-WORKDIR /source/OpenChat.PlaygroundApp
+WORKDIR /source/OpenChat.AppHost
 
 ARG TARGETARCH
 RUN case "$TARGETARCH" in \
@@ -12,16 +12,16 @@ RUN case "$TARGETARCH" in \
       "arm64") RID="linux-musl-arm64" ;; \
       *) RID="linux-musl-x64" ;; \
     esac && \
-    dotnet publish -c Release -o /app -r $RID --self-contained false
+    dotnet publish -c Release -o ./app -r $RID --self-contained false
 
 FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine AS final
 
-WORKDIR /app
+WORKDIR ./app
 
-COPY --from=build /app .
+COPY --from=build ./app .
 
-RUN chown $APP_UID /app
+RUN chown $APP_UID ./app
 
 USER $APP_UID
 
-ENTRYPOINT ["dotnet", "OpenChat.PlaygroundApp.dll"]
+ENTRYPOINT ["dotnet", "OpenChat.AppHost.dll"]

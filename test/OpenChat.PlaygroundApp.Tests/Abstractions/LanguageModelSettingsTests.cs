@@ -5,7 +5,7 @@ namespace OpenChat.PlaygroundApp.Tests.Abstractions;
 
 public class LanguageModelSettingsTests
 {
-	[Trait("Category", "UnitTest")]
+    [Trait("Category", "UnitTest")]
     [Theory]
     [InlineData(typeof(AmazonBedrockSettings))]
     [InlineData(typeof(AzureAIFoundrySettings))]
@@ -22,10 +22,15 @@ public class LanguageModelSettingsTests
     [InlineData(typeof(UpstageSettings))]
     public void Given_Concrete_Settings_When_Checking_Inheritance_Then_Should_Inherit_From_LanguageModelSettings(Type type)
     {
-        // Act
-        var isSubclass = type.IsSubclassOf(typeof(LanguageModelSettings));
+        // Arrange
+        var baseType = typeof(LanguageModelSettings);
         
+        // Act
+        var isBaseAssignableFromDerived = baseType.IsAssignableFrom(type);
+        var isDerivedAssignableFromBase = type.IsAssignableFrom(baseType);
+
         // Assert
-        isSubclass.ShouldBeTrue();
+        isBaseAssignableFromDerived.ShouldBeTrue();
+        isDerivedAssignableFromBase.ShouldBeFalse();
     }
 }

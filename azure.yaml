@@ -1,16 +1,50 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
 
-name: open-chat-playground
+name: open-chat-playground-preview
 
 metadata:
   template: azd-init@1.18.0
 
-services:
-  openchat-playgroundapp:
-    project: src/OpenChat.PlaygroundApp
+services:  
+  openchat-playgroundapp-preview:
+    project: src/OpenChat.AppHost
     host: containerapp
     language: dotnet
     docker:
       path: ../../Dockerfile.azure
       context: ../../
       remoteBuild: true
+
+hooks:
+  preprovision:
+    posix:
+      shell: sh
+      continueOnError: false
+      interactive: false
+      run: |
+        CONNECTOR_TYPE=$(azd env get-value CONNECTOR_TYPE)
+        AZURE_LOCATION=$(azd env get-value AZURE_LOCATION)
+
+        if [ "$CONNECTOR_TYPE" = "HuggingFace" ] || [ "$CONNECTOR_TYPE" = "Ollama" ] || [ "$CONNECTOR_TYPE" = "LG" ];
+        then
+          if [ "$AZURE_LOCATION" != "australiaeast" ] && [ "$AZURE_LOCATION" != "swedencentral" ] && [ "$AZURE_LOCATION" != "westus3" ];
+          then
+            echo "Selected location, $AZURE_LOCATION is invalid for the connector, $CONNECTOR_TYPE. Please select one of the supported locations: Australia East, Sweden Central, West US 3."
+            exit 1
+          fi
+        fi
+
+    windows:
+      shell: pwsh
+      continueOnError: false
+      interactive: false
+      run: |
+        $CONNECTOR_TYPE = azd env get-value CONNECTOR_TYPE
+        $AZURE_LOCATION = azd env get-value AZURE_LOCATION
+
+        if (($CONNECTOR_TYPE -eq "HuggingFace") -or ($CONNECTOR_TYPE -eq "Ollama") -or ($CONNECTOR_TYPE -eq "LG")) {
+          if (($AZURE_LOCATION -ne "australiaeast") -and ($AZURE_LOCATION -ne "swedencentral") -and ($AZURE_LOCATION -ne "westus3")) {
+            Write-Host "Selected location, $AZURE_LOCATION is invalid for the connector, $CONNECTOR_TYPE. Please select one of the supported locations: Australia East, Sweden Central, West US 3."
+            exit 1
+          }
+        }

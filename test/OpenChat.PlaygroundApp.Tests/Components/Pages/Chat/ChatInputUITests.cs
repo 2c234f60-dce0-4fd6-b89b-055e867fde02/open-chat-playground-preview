@@ -5,6 +5,8 @@ namespace OpenChat.PlaygroundApp.Tests.Components.Pages.Chat;
 
 public class ChatInputUITest : PageTest
 {
+    private const int TimeoutMs = 60000;
+
     public override async Task InitializeAsync()
     {
         await base.InitializeAsync();
@@ -13,6 +15,72 @@ public class ChatInputUITest : PageTest
     }
 
     [Trait("Category", "IntegrationTest")]
+    [Trait("Category", "UI")]
+    [Fact]
+    public async Task Given_Root_Page_When_Loaded_Then_Textarea_Should_Have_Correct_Placeholder()
+    {
+        // Arrange
+        var textArea = Page.GetByRole(AriaRole.Textbox, new() { Name = "User Message Textarea" });
+
+        // Act
+        var placeholder = await textArea.GetAttributeAsync("placeholder");
+
+        // Assert
+        placeholder.ShouldBe("Type your message...");
+    }
+
+    [Trait("Category", "IntegrationTest")]
+    [Trait("Category", "UI")]
+    [Fact]
+    public async Task Given_Root_Page_When_Loaded_Then_SendButton_Should_Have_Correct_Title()
+    {
+        // Arrange
+        var sendButton = Page.GetByRole(AriaRole.Button, new() { Name = "User Message Send Button" });
+
+        // Act
+        var title = await sendButton.GetAttributeAsync("title");
+
+        // Assert
+        title.ShouldBe("Send");
+    }
+
+    [Trait("Category", "IntegrationTest")]
+    [Trait("Category", "UI")]
+    [Fact]
+    public async Task Given_Root_Page_When_Loaded_Then_SendButton_Icon_Should_Be_Visible()
+    {
+        // Arrange
+        var sendButtonIcon = Page.Locator("button[aria-label='User Message Send Button'] svg");
+
+        // Act
+        var isVisible = await sendButtonIcon.IsVisibleAsync();
+
+        // Assert
+        isVisible.ShouldBeTrue();
+    }
+
+    [Trait("Category", "IntegrationTest")]
+    [Trait("Category", "UI")]
+    [Theory]
+    [InlineData("Input usermessage")]
+    public async Task Given_UserMessage_When_Tab_Pressed_Then_Focus_Should_Move_To_SendButton(string userMessage)
+    {
+        // Arrange
+        var textArea = Page.GetByRole(AriaRole.Textbox, new() { Name = "User Message Textarea" });
+        var sendButton = Page.GetByRole(AriaRole.Button, new() { Name = "User Message Send Button" });
+
+        // Act
+        await textArea.FocusAsync();
+        await textArea.FillAsync(userMessage);
+        await textArea.PressAsync("Tab");
+
+        // Assert
+        var isFocused = await sendButton.EvaluateAsync<bool>("el => document.activeElement === el");
+        isFocused.ShouldBeTrue();
+    }
+
+    [Trait("Category", "IntegrationTest")]
+    [Trait("Category", "UI")]
     [Trait("Category", "LLMRequired")]
     [Theory]
     [InlineData("하늘은 왜 푸른 색인가요?", 1)]
@@ -32,7 +100,8 @@ public class ChatInputUITest : PageTest
         // Wait until an assistant message appears
         await Page.WaitForFunctionAsync(
             "args => document.querySelectorAll(args.selector).length >= args.expected",
-            new { selector = ".assistant-message-header", expected = messageCountBefore + expectedMessageCount }
+            new { selector = ".assistant-message-header", expected = messageCountBefore + expectedMessageCount },
+            options: new() { Timeout = TimeoutMs }
         );
         var textAreaAfter = await textArea.InnerTextAsync();
         textAreaAfter.ShouldBeEmpty();
@@ -41,6 +110,7 @@ public class ChatInputUITest : PageTest
     }
 
     [Trait("Category", "IntegrationTest")]
+    [Trait("Category", "UI")]
     [Theory]
     [InlineData("", 0)]
     [InlineData(" ", 0)]
@@ -64,6 +134,7 @@ public class ChatInputUITest : PageTest
     }
 
     [Trait("Category", "IntegrationTest")]
+    [Trait("Category", "UI")]
     [Trait("Category", "LLMRequired")]
     [Theory]
     [InlineData("하늘은 왜 푸른 색인가요?", 1)]
@@ -82,7 +153,8 @@ public class ChatInputUITest : PageTest
         // Wait until an assistant message appears
         await Page.WaitForFunctionAsync(
             "args => document.querySelectorAll(args.selector).length >= args.expected",
-            new { selector = ".assistant-message-header", expected = messageCountBefore + expectedMessageCount }
+            new { selector = ".assistant-message-header", expected = messageCountBefore + expectedMessageCount },
+            options: new() { Timeout = TimeoutMs }
         );
         var textAreaAfter = await textArea.InnerTextAsync();
         textAreaAfter.ShouldBeEmpty();
@@ -91,6 +163,7 @@ public class ChatInputUITest : PageTest
     }
 
     [Trait("Category", "IntegrationTest")]
+    [Trait("Category", "UI")]
     [Theory]
     [InlineData("", 0)]
     [InlineData(" ", 0)]
@@ -112,6 +185,7 @@ public class ChatInputUITest : PageTest
     }
 
     [Trait("Category", "IntegrationTest")]
+    [Trait("Category", "UI")]
     [Theory]
     [InlineData("하늘은 왜 푸를까?", "rgb(0, 0, 0)")]
     [InlineData("Why is the sky blue?", "rgb(0, 0, 0)")]
@@ -130,6 +204,7 @@ public class ChatInputUITest : PageTest
     }
 
     [Trait("Category", "IntegrationTest")]
+    [Trait("Category", "UI")]
     [Theory]
     [InlineData("", "rgb(170, 170, 170)")]
     [InlineData(" ", "rgb(170, 170, 170)")]
@@ -147,6 +222,43 @@ public class ChatInputUITest : PageTest
         // Assert
         var sendButtonColor = await sendButton.EvaluateAsync<string>("el => window.getComputedStyle(el).color");
         sendButtonColor.ShouldBe(expectedButtonColor);
+    }
+
+    [Trait("Category", "IntegrationTest")]
+    [Trait("Category", "UI")]
+    [Theory]
+    [InlineData("Line 1\nLine 2\nLine 3\nLine 4\nLine 5")]
+    public async Task Given_Textarea_When_MultipleLines_Added_Then_Height_Should_Adjust(string multilineText)
+    {
+        // Arrange
+        var textArea = Page.GetByRole(AriaRole.Textbox, new() { Name = "User Message Textarea" });
+
+        // Act
+        var initialHeight = await textArea.EvaluateAsync<int>("el => el.scrollHeight");
+        await textArea.FillAsync(multilineText);
+        await textArea.DispatchEventAsync("input");
+        
+        // Assert
+        var finalHeight = await textArea.EvaluateAsync<int>("el => el.scrollHeight");
+        finalHeight.ShouldBeGreaterThan(initialHeight);
+    }
+
+    [Trait("Category", "IntegrationTest")]
+    [Trait("Category", "UI")]
+    [Theory]
+    [InlineData("Line 1\nLine 2\nLine 3\nLine 4\nLine 5", 5)]
+    public async Task Given_Multiline_UserMessage_When_Filled_Then_TextArea_Should_Contain_Correct_LineCount(string userMessage, int expectedLineCount)
+    {
+        // Arrange
+        var textArea = Page.GetByRole(AriaRole.Textbox, new() { Name = "User Message Textarea" });
+
+        // Act
+        await textArea.FillAsync(userMessage);
+
+        // Assert
+        var textAreaContent = await textArea.InputValueAsync();
+        var actualLineCount = textAreaContent.Split('\n').Length;
+        actualLineCount.ShouldBe(expectedLineCount);
     }
 
     public override async Task DisposeAsync()

@@ -16,8 +16,5 @@ public partial class AppSettings
 /// </summary>
 public class FoundryLocalSettings : LanguageModelSettings
 {
-    /// <summary>
-    /// Gets or sets the alias of FoundryLocal.
-    /// </summary>
     public string? Alias { get; set; }
 }

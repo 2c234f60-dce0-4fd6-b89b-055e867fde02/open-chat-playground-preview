@@ -1,5 +1,6 @@
 using OpenChat.PlaygroundApp.Configurations;
 using OpenChat.PlaygroundApp.Connectors;
+using OpenChat.PlaygroundApp.Constants;
 using OpenChat.PlaygroundApp.Options;
 
 namespace OpenChat.PlaygroundApp.Abstractions;
@@ -12,44 +13,58 @@ public abstract class ArgumentOptions
     private static readonly (ConnectorType ConnectorType, string Argument, bool IsSwitch)[] arguments =
     [
         // Amazon Bedrock
-        (ConnectorType.AmazonBedrock, "--access-key-id", false),
-        (ConnectorType.AmazonBedrock, "--secret-access-key", false),
-        (ConnectorType.AmazonBedrock, "--region", false),
-        (ConnectorType.AmazonBedrock, "--model-id", false),
+        (ConnectorType.AmazonBedrock, ArgumentOptionConstants.AmazonBedrock.AccessKeyId, false),
+        (ConnectorType.AmazonBedrock, ArgumentOptionConstants.AmazonBedrock.SecretAccessKey, false),
+        (ConnectorType.AmazonBedrock, ArgumentOptionConstants.AmazonBedrock.Region, false),
+        (ConnectorType.AmazonBedrock, ArgumentOptionConstants.AmazonBedrock.ModelId, false),
         // Azure AI Foundry
-        (ConnectorType.AzureAIFoundry, "--endpoint", false),
-        (ConnectorType.AzureAIFoundry, "--api-key", false),
-        (ConnectorType.AzureAIFoundry, "--deployment-name", false),
+        (ConnectorType.AzureAIFoundry, ArgumentOptionConstants.AzureAIFoundry.Endpoint, false),
+        (ConnectorType.AzureAIFoundry, ArgumentOptionConstants.AzureAIFoundry.ApiKey, false),
+        (ConnectorType.AzureAIFoundry, ArgumentOptionConstants.AzureAIFoundry.DeploymentName, false),
         // GitHub Models
-        (ConnectorType.GitHubModels, "--endpoint", false),
-        (ConnectorType.GitHubModels, "--token", false),
-        (ConnectorType.GitHubModels, "--model", false),
+        (ConnectorType.GitHubModels, ArgumentOptionConstants.GitHubModels.Endpoint, false),
+        (ConnectorType.GitHubModels, ArgumentOptionConstants.GitHubModels.Token, false),
+        (ConnectorType.GitHubModels, ArgumentOptionConstants.GitHubModels.Model, false),
         // Google Vertex AI
-        (ConnectorType.GoogleVertexAI, "--api-key", false),
-        (ConnectorType.GoogleVertexAI, "--model", false),
+        (ConnectorType.GoogleVertexAI, ArgumentOptionConstants.GoogleVertexAI.ApiKey, false),
+        (ConnectorType.GoogleVertexAI, ArgumentOptionConstants.GoogleVertexAI.Model, false),
+        (ConnectorType.GoogleVertexAI, ArgumentOptionConstants.GoogleVertexAI.AccessToken, false),
+        (ConnectorType.GoogleVertexAI, ArgumentOptionConstants.GoogleVertexAI.ProjectId, false),
+        (ConnectorType.GoogleVertexAI, ArgumentOptionConstants.GoogleVertexAI.Region, false),
         // Docker Model Runner
+        (ConnectorType.DockerModelRunner, ArgumentOptionConstants.DockerModelRunner.BaseUrl, false),
+        (ConnectorType.DockerModelRunner, ArgumentOptionConstants.DockerModelRunner.Model, false),
         // Foundry Local
-        (ConnectorType.FoundryLocal, "--alias", false),
+        (ConnectorType.FoundryLocal, ArgumentOptionConstants.FoundryLocal.Alias, false),
         // Hugging Face
-        (ConnectorType.HuggingFace, "--base-url", false),
-        (ConnectorType.HuggingFace, "--model", false),
+        (ConnectorType.HuggingFace, ArgumentOptionConstants.HuggingFace.BaseUrl, false),
+        (ConnectorType.HuggingFace, ArgumentOptionConstants.HuggingFace.Model, false),
         // Ollama
-        (ConnectorType.Ollama, "--base-url", false),
-        (ConnectorType.Ollama, "--model", false),
+        (ConnectorType.Ollama, ArgumentOptionConstants.Ollama.BaseUrl, false),
+        (ConnectorType.Ollama, ArgumentOptionConstants.Ollama.Model, false),
         // Anthropic
-        (ConnectorType.Anthropic, "--api-key", false),
-        (ConnectorType.Anthropic, "--model", false),
+        (ConnectorType.Anthropic, ArgumentOptionConstants.Anthropic.ApiKey, false),
+        (ConnectorType.Anthropic, ArgumentOptionConstants.Anthropic.Model, false),
         // LG
-        (ConnectorType.LG, "--base-url", false),
-        (ConnectorType.LG, "--model", false),
+        (ConnectorType.LG, ArgumentOptionConstants.LG.BaseUrl, false),
+        (ConnectorType.LG, ArgumentOptionConstants.LG.Model, false),
         // Naver
+        (ConnectorType.Naver, "--base-url", false),
+        (ConnectorType.Naver, "--api-key", false),
+        (ConnectorType.Naver, "--model", false),
+        // NC
+        (ConnectorType.NC, "--base-url", false),
+        (ConnectorType.NC, "--model", false),
+        // SKT
+        (ConnectorType.SKT, "--base-url", false),
+        (ConnectorType.SKT, "--model", false),
         // OpenAI
-        (ConnectorType.OpenAI, "--api-key", false),
-        (ConnectorType.OpenAI, "--model", false),
+        (ConnectorType.OpenAI, ArgumentOptionConstants.OpenAI.ApiKey, false),
+        (ConnectorType.OpenAI, ArgumentOptionConstants.OpenAI.Model, false),
         // Upstage
-        (ConnectorType.Upstage, "--base-url", false),
-        (ConnectorType.Upstage, "--api-key", false),
-        (ConnectorType.Upstage, "--model", false)
+        (ConnectorType.Upstage, ArgumentOptionConstants.Upstage.BaseUrl, false),
+        (ConnectorType.Upstage, ArgumentOptionConstants.Upstage.ApiKey, false),
+        (ConnectorType.Upstage, ArgumentOptionConstants.Upstage.Model, false)
     ];
 
     /// <summary>
@@ -70,15 +85,21 @@ public abstract class ArgumentOptions
     /// <returns>The verified <see cref="ConnectorType"/> value.</returns>
     public static ConnectorType VerifyConnectorType(IConfiguration config, string[] args)
     {
-        var connectorType = Enum.TryParse<ConnectorType>(config["ConnectorType"], ignoreCase: true, out var result) ? result : ConnectorType.Unknown;
+        var connectorType = Enum.TryParse<ConnectorType>(config[AppSettingConstants.ConnectorType], ignoreCase: true, out var configResult)
+                            ? configResult
+                            : ConnectorType.Unknown;
+        if (Enum.TryParse<ConnectorType>(config[EnvironmentVariableConstants.ConnectorType], ignoreCase: true, out var environmentResult))
+        {
+            connectorType = environmentResult;
+        }
         for (var i = 0; i < args.Length; i++)
         {
-            if (string.Equals(args[i], "--connector-type", StringComparison.InvariantCultureIgnoreCase) ||
-                string.Equals(args[i], "-c", StringComparison.InvariantCultureIgnoreCase))
+            if (string.Equals(args[i], ArgumentOptionConstants.ConnectorType, StringComparison.InvariantCultureIgnoreCase) ||
+                string.Equals(args[i], ArgumentOptionConstants.ConnectorTypeInShort, StringComparison.InvariantCultureIgnoreCase))
             {
-                if (i + 1 < args.Length && Enum.TryParse<ConnectorType>(args[i + 1], ignoreCase: true, out result))
+                if (i + 1 < args.Length && Enum.TryParse<ConnectorType>(args[i + 1], ignoreCase: true, out var argumentResult))
                 {
-                    connectorType = result;
+                    connectorType = argumentResult;
                 }
                 break;
             }
@@ -124,8 +145,8 @@ public abstract class ArgumentOptions
         {
             switch (args[i])
             {
-                case "--connector-type":
-                case "-c":
+                case ArgumentOptionConstants.ConnectorType:
+                case ArgumentOptionConstants.ConnectorTypeInShort:
                     if (i + 1 < args.Length)
                     {
                         if (Enum.TryParse<ConnectorType>(args[++i], ignoreCase: true, out var result))
@@ -135,8 +156,8 @@ public abstract class ArgumentOptions
                     }
                     break;
 
-                case "--help":
-                case "-h":
+                case ArgumentOptionConstants.Help:
+                case ArgumentOptionConstants.HelpInShort:
                     options.Help = true;
                     break;
 
@@ -164,75 +185,83 @@ public abstract class ArgumentOptions
                 settings.AmazonBedrock.Region = amazonBedrock.Region ?? settings.AmazonBedrock.Region;
                 settings.AmazonBedrock.ModelId = amazonBedrock.ModelId ?? settings.AmazonBedrock.ModelId;
                 break;
-
             case AzureAIFoundryArgumentOptions azureAIFoundry:
                 settings.AzureAIFoundry ??= new AzureAIFoundrySettings();
                 settings.AzureAIFoundry.Endpoint = azureAIFoundry.Endpoint ?? settings.AzureAIFoundry.Endpoint;
                 settings.AzureAIFoundry.ApiKey = azureAIFoundry.ApiKey ?? settings.AzureAIFoundry.ApiKey;
                 settings.AzureAIFoundry.DeploymentName = azureAIFoundry.DeploymentName ?? settings.AzureAIFoundry.DeploymentName;
                 break;
-
             case GitHubModelsArgumentOptions github:
                 settings.GitHubModels ??= new GitHubModelsSettings();
                 settings.GitHubModels.Endpoint = github.Endpoint ?? settings.GitHubModels.Endpoint;
                 settings.GitHubModels.Token = github.Token ?? settings.GitHubModels.Token;
                 settings.GitHubModels.Model = github.Model ?? settings.GitHubModels.Model;
                 break;
-            
             case GoogleVertexAIArgumentOptions googleVertexAI:
                 settings.GoogleVertexAI ??= new GoogleVertexAISettings();
                 settings.GoogleVertexAI.ApiKey = googleVertexAI.ApiKey ?? settings.GoogleVertexAI.ApiKey;
                 settings.GoogleVertexAI.Model = googleVertexAI.Model ?? settings.GoogleVertexAI.Model;
+                settings.GoogleVertexAI.AccessToken = googleVertexAI.AccessToken ?? settings.GoogleVertexAI.AccessToken;
+                settings.GoogleVertexAI.ProjectId = googleVertexAI.ProjectId ?? settings.GoogleVertexAI.ProjectId;
+                settings.GoogleVertexAI.Region = googleVertexAI.Region ?? settings.GoogleVertexAI.Region;
                 break;
-
-            // case DockerModelRunnerArgumentOptions dockerModelRunner:
-            //     break;
-
+            case DockerModelRunnerArgumentOptions dockerModelRunner:
+                settings.DockerModelRunner ??= new DockerModelRunnerSettings();
+                settings.DockerModelRunner.BaseUrl = dockerModelRunner.BaseUrl ?? settings.DockerModelRunner.BaseUrl;
+                settings.DockerModelRunner.Model = dockerModelRunner.Model ?? settings.DockerModelRunner.Model;
+                settings.Model = dockerModelRunner.Model ?? settings.DockerModelRunner.Model;
+                break;
             case FoundryLocalArgumentOptions foundryLocal:
                 settings.FoundryLocal ??= new FoundryLocalSettings();
                 settings.FoundryLocal.Alias = foundryLocal.Alias ?? settings.FoundryLocal.Alias;
                 break;
-
             case HuggingFaceArgumentOptions huggingFace:
                 settings.HuggingFace ??= new HuggingFaceSettings();
                 settings.HuggingFace.BaseUrl = huggingFace.BaseUrl ?? settings.HuggingFace.BaseUrl;
                 settings.HuggingFace.Model = huggingFace.Model ?? settings.HuggingFace.Model;
                 break;
-            
             case OllamaArgumentOptions ollama:
                 settings.Ollama ??= new OllamaSettings();
                 settings.Ollama.BaseUrl = ollama.BaseUrl ?? settings.Ollama.BaseUrl;
                 settings.Ollama.Model = ollama.Model ?? settings.Ollama.Model;
                 break;
-
             case AnthropicArgumentOptions anthropic:
                 settings.Anthropic ??= new AnthropicSettings();
                 settings.Anthropic.ApiKey = anthropic.ApiKey ?? settings.Anthropic.ApiKey;
                 settings.Anthropic.Model = anthropic.Model ?? settings.Anthropic.Model;
                 break;
-
             case LGArgumentOptions lg:
                 settings.LG ??= new LGSettings();
                 settings.LG.BaseUrl = lg.BaseUrl ?? settings.LG.BaseUrl;
                 settings.LG.Model = lg.Model ?? settings.LG.Model;
                 break;
-
-            // case NaverArgumentOptions naver:
-            //     break;
-
+            case NaverArgumentOptions naver:
+                settings.Naver ??= new NaverSettings();
+                settings.Naver.BaseUrl = naver.BaseUrl ?? settings.Naver.BaseUrl;
+                settings.Naver.ApiKey = naver.ApiKey ?? settings.Naver.ApiKey;
+                settings.Naver.Model = naver.Model ?? settings.Naver.Model;
+                break;
+            case NCArgumentOptions nc:
+                settings.NC ??= new NCSettings();
+                settings.NC.BaseUrl = nc.BaseUrl ?? settings.NC.BaseUrl;
+                settings.NC.Model = nc.Model ?? settings.NC.Model;
+                break;
+            case SKTArgumentOptions skt:
+                settings.SKT ??= new SKTSettings();
+                settings.SKT.BaseUrl = skt.BaseUrl ?? settings.SKT.BaseUrl;
+                settings.SKT.Model = skt.Model ?? settings.SKT.Model;
+                break;
             case OpenAIArgumentOptions openai:
                 settings.OpenAI ??= new OpenAISettings();
                 settings.OpenAI.ApiKey = openai.ApiKey ?? settings.OpenAI.ApiKey;
                 settings.OpenAI.Model = openai.Model ?? settings.OpenAI.Model;
                 break;
-
             case UpstageArgumentOptions upstage:
                 settings.Upstage ??= new UpstageSettings();
                 settings.Upstage.BaseUrl = upstage.BaseUrl ?? settings.Upstage.BaseUrl;
                 settings.Upstage.ApiKey = upstage.ApiKey ?? settings.Upstage.ApiKey;
                 settings.Upstage.Model = upstage.Model ?? settings.Upstage.Model;
                 break;
-
             default:
                 break;
         }
@@ -244,24 +273,44 @@ public abstract class ArgumentOptions
     }
 
     /// <summary>
+    /// Displays the application banner.
+    /// </summary>
+    public static void DisplayBanner()
+    {
+        string cyan = "\x1b[38;5;51m";
+        string blue = "\x1b[38;5;33m";
+        string purple = "\x1b[38;5;141m";
+        string pink = "\x1b[38;5;201m";
+        string green = "\x1b[38;5;48m";
+        string reset = "\x1b[0m";
+
+        Console.OutputEncoding = System.Text.Encoding.UTF8;
+
+        Console.WriteLine();
+        Console.WriteLine($@"{cyan}   ██████╗ ██████╗ ███████╗███╗   ██╗   ██████╗██╗  ██╗ █████╗ ████████╗{reset}");
+        Console.WriteLine($@"{blue}  ██╔═══██╗██╔══██╗██╔════╝████╗  ██║  ██╔════╝██║  ██║██╔══██╗╚══██╔══╝{reset}");
+        Console.WriteLine($@"{purple}  ██║   ██║██████╔╝█████╗  ██╔██╗ ██║  ██║     ███████║███████║   ██║   {reset}");
+        Console.WriteLine($@"{pink}  ██║   ██║██╔═══╝ ██╔══╝  ██║╚██╗██║  ██║     ██╔══██║██╔══██║   ██║   {reset}");
+        Console.WriteLine($@"{cyan}  ╚██████╔╝██║     ███████╗██║ ╚████║  ╚██████╗██║  ██║██║  ██║   ██║   {reset}");
+        Console.WriteLine($@"{blue}   ╚═════╝ ╚═╝     ╚══════╝╚═╝  ╚═══╝   ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   {reset}");
+
+        Console.WriteLine();
+
+        Console.WriteLine($@"{green}  ██████╗ ██╗      █████╗ ██╗   ██╗ ██████╗ ██████╗  ██████╗ ██╗   ██╗███╗   ██╗██████╗ {reset}");
+        Console.WriteLine($@"{green}  ██╔══██╗██║     ██╔══██╗╚██╗ ██╔╝██╔════╝ ██╔══██╗██╔═══██╗██║   ██║████╗  ██║██╔══██╗{reset}");
+        Console.WriteLine($@"{cyan}  ██████╔╝██║     ███████║ ╚████╔╝ ██║  ███╗██████╔╝██║   ██║██║   ██║██╔██╗ ██║██║  ██║{reset}");
+        Console.WriteLine($@"{blue}  ██╔═══╝ ██║     ██╔══██║  ╚██╔╝  ██║   ██║██╔══██╗██║   ██║██║   ██║██║╚██╗██║██║  ██║{reset}");
+        Console.WriteLine($@"{purple}  ██║     ███████╗██║  ██║   ██║   ╚██████╔╝██║  ██║╚██████╔╝╚██████╔╝██║ ╚████║██████╔╝{reset}");
+        Console.WriteLine($@"{pink}  ╚═╝     ╚══════╝╚═╝  ╚═╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝ ╚═════╝  ╚═════╝ ╚═╝  ╚═══╝╚═════╝ {reset}");
+
+        Console.WriteLine();
+    }
+
+    /// <summary>
     /// Displays the help information for the command line arguments.
     /// </summary>
     public static void DisplayHelp()
     {
-        var foregroundColor = Console.ForegroundColor;
-
-        Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.WriteLine("OpenChat Playground");
-        Console.ForegroundColor = foregroundColor;
-
-        Console.WriteLine("Usage: [options]");
-        Console.WriteLine();
-        Console.WriteLine("Options:");
-        Console.WriteLine("  --connector-type|-c  The connector type. Supporting connectors are:");
-        Console.WriteLine("                       - AmazonBedrock, AzureAIFoundry, GitHubModels, GoogleVertexAI");
-        Console.WriteLine("                       - DockerModelRunner, FoundryLocal, HuggingFace, Ollama");
-        Console.WriteLine("                       - Anthropic, LG, Naver, OpenAI, Upstage");
-        Console.WriteLine();
         DisplayHelpForAmazonBedrock();
         DisplayHelpForAzureAIFoundry();
         DisplayHelpForGitHubModels();
@@ -273,9 +322,33 @@ public abstract class ArgumentOptions
         DisplayHelpForAnthropic();
         DisplayHelpForLG();
         DisplayHelpForNaver();
+        DisplayHelpForNC();
+        DisplayHelpForSKT();
         DisplayHelpForOpenAI();
         DisplayHelpForUpstage();
-        Console.WriteLine("  --help|-h            Show this help message.");
+        Console.WriteLine($"  {ArgumentOptionConstants.Help}|{ArgumentOptionConstants.HelpInShort}            Show this help message.");
+    }
+
+    private static void DisplayHelpForNC()
+    {
+        var foregroundColor = Console.ForegroundColor;
+        Console.ForegroundColor = ConsoleColor.DarkGreen;
+        Console.WriteLine("  ** NC: **");
+        Console.ForegroundColor = foregroundColor;
+        Console.WriteLine("  --base-url           The NC API endpoint URL.");
+        Console.WriteLine("  --model              The NC model name.");
+        Console.WriteLine();
+    }
+
+    private static void DisplayHelpForSKT()
+    {
+        var foregroundColor = Console.ForegroundColor;
+        Console.ForegroundColor = ConsoleColor.DarkGreen;
+        Console.WriteLine("  ** SKT: **");
+        Console.ForegroundColor = foregroundColor;
+        Console.WriteLine("  --base-url           The SKT API endpoint URL.");
+        Console.WriteLine("  --model              The SKT model name.");
+        Console.WriteLine();
     }
 
     /// <summary>
@@ -305,10 +378,10 @@ public abstract class ArgumentOptions
         Console.WriteLine("  ** Amazon Bedrock: **");
         Console.ForegroundColor = foregroundColor;
 
-        Console.WriteLine("  --access-key-id     The AWSCredentials Access Key ID.");
-        Console.WriteLine("  --secret-access-key The AWSCredentials Secret Access Key.");
-        Console.WriteLine("  --region            The AWS region.");
-        Console.WriteLine("  --model-id          The model ID. Default to 'anthropic.claude-sonnet-4-20250514-v1:0'");
+        Console.WriteLine($"  {ArgumentOptionConstants.AmazonBedrock.AccessKeyId}     The AWSCredentials Access Key ID.");
+        Console.WriteLine($"  {ArgumentOptionConstants.AmazonBedrock.SecretAccessKey} The AWSCredentials Secret Access Key.");
+        Console.WriteLine($"  {ArgumentOptionConstants.AmazonBedrock.Region}            The AWS region.");
+        Console.WriteLine($"  {ArgumentOptionConstants.AmazonBedrock.ModelId}          The model ID. Default to 'anthropic.claude-sonnet-4-20250514-v1:0'");
         Console.WriteLine();
     }
 
@@ -319,9 +392,9 @@ public abstract class ArgumentOptions
         Console.WriteLine("  ** Azure AI Foundry: **");
         Console.ForegroundColor = foregroundColor;
 
-        Console.WriteLine("  --endpoint           The Azure AI Foundry endpoint.");
-        Console.WriteLine("  --api-key            The Azure AI Foundry API key.");
-        Console.WriteLine("  --deployment-name    The deployment name. Default to 'gpt-4o-mini'");
+        Console.WriteLine($"  {ArgumentOptionConstants.AzureAIFoundry.Endpoint}           The Azure AI Foundry endpoint.");
+        Console.WriteLine($"  {ArgumentOptionConstants.AzureAIFoundry.ApiKey}            The Azure AI Foundry API key.");
+        Console.WriteLine($"  {ArgumentOptionConstants.AzureAIFoundry.DeploymentName}    The deployment name. Default to 'gpt-4o-mini'");
         Console.WriteLine();
     }
 
@@ -332,9 +405,9 @@ public abstract class ArgumentOptions
         Console.WriteLine("  ** GitHub Models: **");
         Console.ForegroundColor = foregroundColor;
 
-        Console.WriteLine("  --endpoint           The endpoint URL. Default to 'https://models.github.ai/inference'");
-        Console.WriteLine("  --token              The GitHub PAT.");
-        Console.WriteLine("  --model              The model name. Default to 'openai/gpt-4o-mini'");
+        Console.WriteLine($"  {ArgumentOptionConstants.GitHubModels.Endpoint}           The endpoint URL. Default to 'https://models.github.ai/inference'");
+        Console.WriteLine($"  {ArgumentOptionConstants.GitHubModels.Token}              The GitHub PAT.");
+        Console.WriteLine($"  {ArgumentOptionConstants.GitHubModels.Model}              The model name. Default to 'openai/gpt-4o-mini'");
         Console.WriteLine();
     }
 
@@ -345,8 +418,10 @@ public abstract class ArgumentOptions
         Console.WriteLine("  ** Google Vertex AI: **");
         Console.ForegroundColor = foregroundColor;
 
-        Console.WriteLine("  TBD");
-        Console.WriteLine();
+    Console.WriteLine("  --endpoint           The Google Vertex AI endpoint URL.");
+    Console.WriteLine("  --api-key            The Google Vertex AI API key.");
+    Console.WriteLine("  --model              The model name for Vertex AI.");
+    Console.WriteLine();
     }
 
     private static void DisplayHelpForDockerModelRunner()
@@ -356,7 +431,8 @@ public abstract class ArgumentOptions
         Console.WriteLine("  ** Docker Model Runner: **");
         Console.ForegroundColor = foregroundColor;
 
-        Console.WriteLine("  TBD");
+        Console.WriteLine($"  {ArgumentOptionConstants.DockerModelRunner.BaseUrl}           The base URL. Default to 'http://localhost:12434'");
+        Console.WriteLine($"  {ArgumentOptionConstants.DockerModelRunner.Model}              The model name. Default to 'ai/smollm2'");
         Console.WriteLine();
     }
 
@@ -367,8 +443,8 @@ public abstract class ArgumentOptions
         Console.WriteLine("  ** Foundry Local: **");
         Console.ForegroundColor = foregroundColor;
 
-        Console.WriteLine("  TBD");
-        Console.WriteLine();
+    Console.WriteLine("  --alias              The alias for Foundry Local model.");
+    Console.WriteLine();
     }
 
     private static void DisplayHelpForHuggingFace()
@@ -378,8 +454,8 @@ public abstract class ArgumentOptions
         Console.WriteLine("  ** Hugging Face: **");
         Console.ForegroundColor = foregroundColor;
 
-        Console.WriteLine("  --base-url           The endpoint URL. Default to 'http://localhost:11434'");
-        Console.WriteLine("  --model              The model name. Default to 'hf.co/google/gemma-3-1b-pt-qat-q4_0-gguf'");
+        Console.WriteLine($"  {ArgumentOptionConstants.HuggingFace.BaseUrl}           The endpoint URL. Default to 'http://localhost:11434'");
+        Console.WriteLine($"  {ArgumentOptionConstants.HuggingFace.Model}              The model name. Default to 'hf.co/google/gemma-3-1b-pt-qat-q4_0-gguf'");
         Console.WriteLine();
     }
 
@@ -390,8 +466,8 @@ public abstract class ArgumentOptions
         Console.WriteLine("  ** Ollama: **");
         Console.ForegroundColor = foregroundColor;
 
-        Console.WriteLine("  --base-url           The baseURL. Default to 'http://localhost:11434'");
-        Console.WriteLine("  --model              The model name. Default to 'llama3.2'");
+        Console.WriteLine($"  {ArgumentOptionConstants.Ollama.BaseUrl}           The baseURL. Default to 'http://localhost:11434'");
+        Console.WriteLine($"  {ArgumentOptionConstants.Ollama.Model}              The model name. Default to 'llama3.2'");
         Console.WriteLine();
     }
 
@@ -402,8 +478,8 @@ public abstract class ArgumentOptions
         Console.WriteLine("  ** Anthropic: **");
         Console.ForegroundColor = foregroundColor;
 
-        Console.WriteLine("  --api-key            The Anthropic API key.");
-        Console.WriteLine("  --model              The Anthropic model name. Default to 'claude-sonnet-4-0'");
+        Console.WriteLine($"  {ArgumentOptionConstants.Anthropic.ApiKey}            The Anthropic API key.");
+        Console.WriteLine($"  {ArgumentOptionConstants.Anthropic.Model}              The Anthropic model name. Default to 'claude-sonnet-4-0'");
         Console.WriteLine();
     }
 
@@ -414,7 +490,8 @@ public abstract class ArgumentOptions
         Console.WriteLine("  ** LG: **");
         Console.ForegroundColor = foregroundColor;
 
-        Console.WriteLine("  TBD");
+        Console.WriteLine("  --base-url           The endpoint URL. Default to 'http://localhost:11434'");
+        Console.WriteLine("  --model              The model name. Default to 'hf.co/LG/exaone-4.0-1.2b'");
         Console.WriteLine();
     }
 
@@ -425,8 +502,10 @@ public abstract class ArgumentOptions
         Console.WriteLine("  ** Naver: **");
         Console.ForegroundColor = foregroundColor;
 
-        Console.WriteLine("  TBD");
-        Console.WriteLine();
+    Console.WriteLine("  --base-url           The Naver API endpoint URL.");
+    Console.WriteLine("  --api-key            The Naver API key.");
+    Console.WriteLine("  --model              The Naver model name.");
+    Console.WriteLine();
     }
 
     private static void DisplayHelpForOpenAI()
@@ -436,8 +515,8 @@ public abstract class ArgumentOptions
         Console.WriteLine("  ** OpenAI: **");
         Console.ForegroundColor = foregroundColor;
 
-        Console.WriteLine("  --api-key            The OpenAI API key. (Env: OPENAI_API_KEY)");
-        Console.WriteLine("  --model              The OpenAI model name. Default to 'gpt-4.1-mini'");
+        Console.WriteLine($"  {ArgumentOptionConstants.OpenAI.ApiKey}            The OpenAI API key. (Env: OPENAI_API_KEY)");
+        Console.WriteLine($"  {ArgumentOptionConstants.OpenAI.Model}              The OpenAI model name. Default to 'gpt-4.1-mini'");
         Console.WriteLine();
     }
 
@@ -448,9 +527,9 @@ public abstract class ArgumentOptions
         Console.WriteLine("  ** Upstage: **");
         Console.ForegroundColor = foregroundColor;
 
-        Console.WriteLine("  --base-url           The base URL for Upstage API. Default to 'https://api.upstage.ai/v1/solar'");
-        Console.WriteLine("  --api-key            The Upstage API key.");
-        Console.WriteLine("  --model              The model name. Default to 'solar-mini'");
+        Console.WriteLine($"  {ArgumentOptionConstants.Upstage.BaseUrl}           The base URL for Upstage API. Default to 'https://api.upstage.ai/v1/solar'");
+        Console.WriteLine($"  {ArgumentOptionConstants.Upstage.ApiKey}            The Upstage API key.");
+        Console.WriteLine($"  {ArgumentOptionConstants.Upstage.Model}              The model name. Default to 'solar-mini'");
         Console.WriteLine();
     }
 }

@@ -69,6 +69,16 @@ public enum ConnectorType
     Naver,
 
     /// <summary>
+    /// Identifies the NC connector type.
+    /// </summary>
+    NC,
+
+    /// <summary>
+    /// Identifies the SKT connector type.
+    /// </summary>
+    SKT,
+
+    /// <summary>
     /// Identifies the OpenAI connector type.
     /// </summary>
     OpenAI,

@@ -1,5 +1,6 @@
 using OpenChat.PlaygroundApp.Abstractions;
 using OpenChat.PlaygroundApp.Configurations;
+using OpenChat.PlaygroundApp.Constants;
 
 namespace OpenChat.PlaygroundApp.Options;
 
@@ -8,46 +9,57 @@ namespace OpenChat.PlaygroundApp.Options;
 /// </summary>
 public class GoogleVertexAIArgumentOptions : ArgumentOptions
 {
-    /// <summary>
-    /// Gets or sets the Google Vertex AI API Key.
-    /// </summary>
     public string? ApiKey { get; set; }
-
-    /// <summary>
-    /// Gets or sets the model name of Google Vertex AI.
-    /// </summary>
     public string? Model { get; set; }
+    public string? AccessToken { get; set; }
+    public string? ProjectId { get; set; }
+    public string? Region { get; set; }
 
-
-    /// <inheritdoc/>
     protected override void ParseOptions(IConfiguration config, string[] args)
     {
         var settings = new AppSettings();
         config.Bind(settings);
-
-        var googleVertexAI = settings.GoogleVertexAI;
-
-        this.ApiKey ??= googleVertexAI?.ApiKey;
-        this.Model ??= googleVertexAI?.Model;
-
+        var google = settings.GoogleVertexAI;
+        this.ApiKey ??= google?.ApiKey;
+        this.Model ??= google?.Model;
+        this.AccessToken ??= google?.AccessToken;
+        this.ProjectId ??= google?.ProjectId;
+        this.Region ??= google?.Region;
         for (var i = 0; i < args.Length; i++)
         {
             switch (args[i])
             {
-                case "--api-key":
+                case ArgumentOptionConstants.GoogleVertexAI.ApiKey:
                     if (i + 1 < args.Length)
                     {
                         this.ApiKey = args[++i];
                     }
                     break;
 
-                case "--model":
+                case ArgumentOptionConstants.GoogleVertexAI.Model:
                     if (i + 1 < args.Length)
                     {
                         this.Model = args[++i];
                     }
                     break;
-
+                case ArgumentOptionConstants.GoogleVertexAI.AccessToken:
+                    if (i + 1 < args.Length)
+                    {
+                        this.AccessToken = args[++i];
+                    }
+                    break;
+                case ArgumentOptionConstants.GoogleVertexAI.ProjectId:
+                    if (i + 1 < args.Length)
+                    {
+                        this.ProjectId = args[++i];
+                    }
+                    break;
+                case ArgumentOptionConstants.GoogleVertexAI.Region:
+                    if (i + 1 < args.Length)
+                    {
+                        this.Region = args[++i];
+                    }
+                    break;
                 default:
                     break;
             }
