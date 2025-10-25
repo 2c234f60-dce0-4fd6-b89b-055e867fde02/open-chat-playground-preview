@@ -40,6 +40,7 @@ public abstract class LanguageModelConnector(LanguageModelSettings? settings)
             ConnectorType.AzureAIFoundry => new AzureAIFoundryConnector(settings),
             ConnectorType.GitHubModels => new GitHubModelsConnector(settings),
             ConnectorType.DockerModelRunner => new DockerModelRunnerConnector(settings),
+            ConnectorType.FoundryLocal => new FoundryLocalConnector(settings),
             ConnectorType.HuggingFace => new HuggingFaceConnector(settings),
             ConnectorType.Ollama => new OllamaConnector(settings),
             ConnectorType.Anthropic => new AnthropicConnector(settings),

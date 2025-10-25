@@ -53,6 +53,10 @@ public class HuggingFaceConnector(AppSettings settings) : LanguageModelConnector
         var settings = this.Settings as HuggingFaceSettings;
 
         var baseUrl = settings!.BaseUrl!.Trim() ?? throw new InvalidOperationException("Missing configuration: HuggingFace:BaseUrl.");
+        if (Uri.IsWellFormedUriString(baseUrl, UriKind.Absolute) == false)
+        {
+            throw new UriFormatException($"Invalid URI: The Hugging Face base URL '{baseUrl}' is not a valid URI.");
+        }
         var model = settings!.Model!.Trim() ?? throw new InvalidOperationException("Missing configuration: HuggingFace:Model.");
 
         var config = new OllamaApiClient.Configuration

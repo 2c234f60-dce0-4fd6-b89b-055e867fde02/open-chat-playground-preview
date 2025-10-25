@@ -47,6 +47,10 @@ public class LGConnector(AppSettings settings) : LanguageModelConnector(settings
         var settings = this.Settings as LGSettings;
 
         var baseUrl = settings!.BaseUrl!.Trim() ?? throw new InvalidOperationException("Missing configuration: LG:BaseUrl.");
+        if (Uri.IsWellFormedUriString(baseUrl, UriKind.Absolute) == false)
+        {
+            throw new UriFormatException($"Invalid URI: The LG base URL '{baseUrl}' is not a valid URI.");
+        }
         var model = settings!.Model!.Trim() ?? throw new InvalidOperationException("Missing configuration: LG:Model.");
 
         var config = new OllamaApiClient.Configuration

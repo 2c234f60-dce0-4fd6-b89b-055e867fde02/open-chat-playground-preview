@@ -151,7 +151,7 @@ public class LGConnectorTests
     [Trait("Category", "UnitTest")]
     [Theory]
     [InlineData(null, typeof(NullReferenceException), "Object reference not set to an instance of an object")]
-    [InlineData("", typeof(UriFormatException), "empty")]
+    [InlineData("", typeof(UriFormatException), "Invalid URI:")]
     [InlineData("   ", typeof(UriFormatException), "Invalid URI:")]
     [InlineData("\t\r\n", typeof(UriFormatException), "Invalid URI:")]
     [InlineData("invalid-uri-format", typeof(UriFormatException), "Invalid URI:")]

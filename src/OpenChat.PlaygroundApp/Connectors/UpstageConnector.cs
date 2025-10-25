@@ -19,8 +19,7 @@ public class UpstageConnector(AppSettings settings) : LanguageModelConnector(set
     /// <inheritdoc/>
     public override bool EnsureLanguageModelSettingsValid()
     {
-        var settings = this.Settings as UpstageSettings;
-        if (settings is null)
+        if (this.Settings is not UpstageSettings settings)
         {
             throw new InvalidOperationException("Missing configuration: Upstage.");
         }

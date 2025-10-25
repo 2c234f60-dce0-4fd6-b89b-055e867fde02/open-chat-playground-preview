@@ -217,11 +217,11 @@ public class DockerModelRunnerConnectorTests
 
     [Trait("Category", "UnitTest")]
     [Theory]
-	[InlineData(null, Model, typeof(InvalidOperationException),"DockerModelRunner:BaseUrl")]
+    [InlineData(null, Model, typeof(InvalidOperationException),"DockerModelRunner:BaseUrl")]
     [InlineData("", Model, typeof(InvalidOperationException), "DockerModelRunner:BaseUrl")]
     [InlineData("   ", Model, typeof(InvalidOperationException), "DockerModelRunner:BaseUrl")]
     [InlineData("\t\r\n", Model, typeof(InvalidOperationException), "DockerModelRunner:BaseUrl")]
-	[InlineData(BaseUrl, null, typeof(InvalidOperationException), "DockerModelRunner:Model")]
+    [InlineData(BaseUrl, null, typeof(InvalidOperationException), "DockerModelRunner:Model")]
     [InlineData(BaseUrl, "", typeof(InvalidOperationException), "DockerModelRunner:Model")]
     [InlineData(BaseUrl, "   ", typeof(InvalidOperationException), "DockerModelRunner:Model")]
     [InlineData(BaseUrl, "\t\r\n", typeof(InvalidOperationException), "DockerModelRunner:Model")]
